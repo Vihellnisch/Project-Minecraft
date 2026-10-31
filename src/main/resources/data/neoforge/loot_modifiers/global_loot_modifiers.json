@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "entries": [
+    "projectminecraft:ancient_city",
+    "projectminecraft:end_city",
+    "projectminecraft:mansion",
+    "projectminecraft:stronghold",
+    "projectminecraft:trial_ominous"
+  ]
+}

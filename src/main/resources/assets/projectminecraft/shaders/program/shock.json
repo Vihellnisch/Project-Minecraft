@@ -1,0 +1,32 @@
+{
+    "blend": { "func": "add", "srcrgb": "one", "dstrgb": "zero" },
+    "vertex": "sobel",
+    "fragment": "projectminecraft:shock",
+    "attributes": [ "Position" ],
+    "samplers": [
+        { "name": "DiffuseSampler" }
+    ],
+    "uniforms": [
+        { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+        { "name": "InSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
+        { "name": "OutSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
+        { "name": "Count", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "Aspect", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S0X", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S0Y", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S0R", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S0A", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S1X", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S1Y", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S1R", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S1A", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S2X", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S2Y", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S2R", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S2A", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S3X", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S3Y", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S3R", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "S3A", "type": "float", "count": 1, "values": [ 0.0 ] }
+    ]
+}

@@ -1,0 +1,9 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "base": { "parent": "projectminecraft:item/empty" },
+  "perspectives": {
+    "gui": { "parent": "minecraft:item/handheld", "textures": { "layer0": "projectminecraft:item/black_silence" } },
+    "fixed": { "parent": "minecraft:item/handheld", "textures": { "layer0": "projectminecraft:item/black_silence" } }
+  }
+}

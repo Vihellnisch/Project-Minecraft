@@ -1,0 +1,15 @@
+{
+  "type": "projectminecraft:add_items",
+  "conditions": [
+    {
+      "condition": "neoforge:loot_table_id",
+      "loot_table_id": "minecraft:chests/woodland_mansion"
+    }
+  ],
+  "entries": [
+    {
+      "what": "projectminecraft:library_invitation",
+      "chance": 0.12
+    }
+  ]
+}

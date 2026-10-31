@@ -1,0 +1,165 @@
+{
+  "arsenal.axe_hit": {
+    "subtitle": "subtitles.projectminecraft.arsenal.axe_hit",
+    "sounds": [
+      "projectminecraft:arsenal/axe_hit"
+    ]
+  },
+  "apocalypse.big_impact": {
+    "subtitle": "subtitles.projectminecraft.apocalypse.big_impact",
+    "sounds": [
+      "projectminecraft:apocalypse/big_impact"
+    ]
+  },
+  "arsenal.blunt": {
+    "subtitle": "subtitles.projectminecraft.arsenal.blunt",
+    "sounds": [
+      "projectminecraft:arsenal/blunt"
+    ]
+  },
+  "arsenal.butterflies": {
+    "subtitle": "subtitles.projectminecraft.arsenal.butterflies",
+    "sounds": [
+      "projectminecraft:arsenal/butterflies"
+    ]
+  },
+  "arsenal.claw": {
+    "subtitle": "subtitles.projectminecraft.arsenal.claw",
+    "sounds": [
+      "projectminecraft:arsenal/claw"
+    ]
+  },
+  "arsenal.coin_heads": {
+    "subtitle": "subtitles.projectminecraft.arsenal.coin_heads",
+    "sounds": [
+      "projectminecraft:arsenal/coin_heads"
+    ]
+  },
+  "arsenal.coin_tails": {
+    "subtitle": "subtitles.projectminecraft.arsenal.coin_tails",
+    "sounds": [
+      "projectminecraft:arsenal/coin_tails"
+    ]
+  },
+  "arsenal.durandal": {
+    "subtitle": "subtitles.projectminecraft.arsenal.durandal",
+    "sounds": [
+      "projectminecraft:arsenal/durandal"
+    ]
+  },
+  "arsenal.ego_activate": {
+    "subtitle": "subtitles.projectminecraft.arsenal.ego_activate",
+    "sounds": [
+      "projectminecraft:arsenal/ego_activate"
+    ]
+  },
+  "arsenal.furioso_sting": {
+    "subtitle": "subtitles.projectminecraft.arsenal.furioso_sting",
+    "sounds": [
+      "projectminecraft:arsenal/furioso_sting"
+    ]
+  },
+  "arsenal.iai_dash": {
+    "subtitle": "subtitles.projectminecraft.arsenal.iai_dash",
+    "sounds": [
+      "projectminecraft:arsenal/iai_dash"
+    ]
+  },
+  "arsenal.iai_slashes": {
+    "subtitle": "subtitles.projectminecraft.arsenal.iai_slashes",
+    "sounds": [
+      "projectminecraft:arsenal/iai_slashes"
+    ]
+  },
+  "arsenal.kaiju_stomp": {
+    "subtitle": "subtitles.projectminecraft.arsenal.kaiju_stomp",
+    "sounds": [
+      "projectminecraft:arsenal/kaiju_stomp"
+    ]
+  },
+  "arsenal.magic_bullet": {
+    "subtitle": "subtitles.projectminecraft.arsenal.magic_bullet",
+    "sounds": [
+      "projectminecraft:arsenal/magic_bullet"
+    ]
+  },
+  "arsenal.magic_circle": {
+    "subtitle": "subtitles.projectminecraft.arsenal.magic_circle",
+    "sounds": [
+      "projectminecraft:arsenal/magic_circle"
+    ]
+  },
+  "arsenal.match_ignite": {
+    "subtitle": "subtitles.projectminecraft.arsenal.match_ignite",
+    "sounds": [
+      "projectminecraft:arsenal/match_ignite"
+    ]
+  },
+  "arsenal.match_stroke": {
+    "subtitle": "subtitles.projectminecraft.arsenal.match_stroke",
+    "sounds": [
+      "projectminecraft:arsenal/match_stroke"
+    ]
+  },
+  "arsenal.revolver": {
+    "subtitle": "subtitles.projectminecraft.arsenal.revolver",
+    "sounds": [
+      "projectminecraft:arsenal/revolver"
+    ]
+  },
+  "arsenal.shotgun": {
+    "subtitle": "subtitles.projectminecraft.arsenal.shotgun",
+    "sounds": [
+      "projectminecraft:arsenal/shotgun"
+    ]
+  },
+  "dash.slice": {
+    "subtitle": "subtitles.projectminecraft.dash.slice",
+    "sounds": [
+      "projectminecraft:dash/slice1",
+      "projectminecraft:dash/slice2"
+    ]
+  },
+  "arsenal.slowmo": {
+    "subtitle": "subtitles.projectminecraft.arsenal.slowmo",
+    "sounds": [
+      "projectminecraft:arsenal/slowmo"
+    ]
+  },
+  "arsenal.solemn_shot": {
+    "subtitle": "subtitles.projectminecraft.arsenal.solemn_shot",
+    "sounds": [
+      "projectminecraft:arsenal/solemn_shot"
+    ]
+  },
+  "arsenal.spear": {
+    "subtitle": "subtitles.projectminecraft.arsenal.spear",
+    "sounds": [
+      "projectminecraft:arsenal/spear"
+    ]
+  },
+  "apocalypse.sting": {
+    "subtitle": "subtitles.projectminecraft.apocalypse.sting",
+    "sounds": [
+      "projectminecraft:apocalypse/sting"
+    ]
+  },
+  "arsenal.weapon_swap": {
+    "subtitle": "subtitles.projectminecraft.arsenal.weapon_swap",
+    "sounds": [
+      "projectminecraft:arsenal/weapon_swap"
+    ]
+  },
+  "arsenal.rush_hit": {
+    "subtitle": "subtitles.projectminecraft.arsenal.rush_hit",
+    "sounds": [
+      "projectminecraft:arsenal/rush_hit"
+    ]
+  },
+  "arsenal.rotation": {
+    "subtitle": "subtitles.projectminecraft.arsenal.rotation",
+    "sounds": [
+      "projectminecraft:arsenal/rotation"
+    ]
+  }
+}

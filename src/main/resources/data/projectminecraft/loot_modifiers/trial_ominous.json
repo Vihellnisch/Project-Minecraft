@@ -1,0 +1,28 @@
+{
+  "type": "projectminecraft:add_items",
+  "conditions": [
+    {
+      "condition": "minecraft:any_of",
+      "terms": [
+        {
+          "condition": "neoforge:loot_table_id",
+          "loot_table_id": "minecraft:chests/trial_chambers/reward_ominous"
+        },
+        {
+          "condition": "neoforge:loot_table_id",
+          "loot_table_id": "minecraft:chests/trial_chambers/reward_ominous_common"
+        },
+        {
+          "condition": "neoforge:loot_table_id",
+          "loot_table_id": "minecraft:chests/trial_chambers/reward_ominous_rare"
+        }
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "what": "projectminecraft:library_invitation",
+      "chance": 0.04
+    }
+  ]
+}

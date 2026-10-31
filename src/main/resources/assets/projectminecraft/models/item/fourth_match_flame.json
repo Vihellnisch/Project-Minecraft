@@ -1,0 +1,9 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "base": { "parent": "projectminecraft:item/3d/fourth_match_flame" },
+  "perspectives": {
+    "gui": { "parent": "minecraft:item/handheld", "textures": { "layer0": "projectminecraft:item/fourth_match_flame" } },
+    "fixed": { "parent": "minecraft:item/handheld", "textures": { "layer0": "projectminecraft:item/fourth_match_flame" } }
+  }
+}

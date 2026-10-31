@@ -1,0 +1,25 @@
+{
+    "blend": { "func": "add", "srcrgb": "one", "dstrgb": "zero" },
+    "vertex": "sobel",
+    "fragment": "projectminecraft:arsenal",
+    "attributes": [ "Position" ],
+    "samplers": [
+        { "name": "DiffuseSampler" }
+    ],
+    "uniforms": [
+        { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+        { "name": "InSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
+        { "name": "OutSize", "type": "float", "count": 2, "values": [ 1.0, 1.0 ] },
+        { "name": "Deadeye", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "Beat", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "Ink", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "InkSeed", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "Tint", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "TintR", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "TintG", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "TintB", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "Speed", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "Aspect", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "GameTime", "type": "float", "count": 1, "values": [ 0.0 ] }
+    ]
+}

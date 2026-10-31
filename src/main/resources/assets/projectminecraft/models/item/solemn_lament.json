@@ -1,0 +1,9 @@
+{
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
+  "base": { "parent": "projectminecraft:item/3d/solemn_lament" },
+  "perspectives": {
+    "gui": { "parent": "minecraft:item/handheld", "textures": { "layer0": "projectminecraft:item/solemn_lament" } },
+    "fixed": { "parent": "minecraft:item/handheld", "textures": { "layer0": "projectminecraft:item/solemn_lament" } }
+  }
+}
