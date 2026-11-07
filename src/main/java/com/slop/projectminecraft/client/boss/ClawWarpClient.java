@@ -199,9 +199,33 @@ public final class ClawWarpClient {
         return tt < GRAB ? tt : (tt - GRAB) % HOP;
     }
 
-    /** Which way they rush across this stage (alternating). */
+    /**
+     * Which way they rush across a stage: always the way that keeps the claw arm on the camera's side (the side view looks
+     * at them from +z), so it's never hidden behind the victim. The Claw's claw is his left arm; a player's is their main arm.
+     */
     static float dir(int stage) {
-        return stage % 2 == 1 ? 1 : -1;
+        if (byClaw) return -1;
+        Minecraft mc = Minecraft.getInstance();
+        Entity a = mc.level == null ? null : mc.level.getEntity(rider);
+        return a instanceof net.minecraft.world.entity.player.Player p && p.getMainArm() == net.minecraft.world.entity.HumanoidArm.LEFT ? -1 : 1;
+    }
+
+    /**
+     * Leaning into the rush: the torso tips forward about the neck, so the hips swing back; the legs move
+     * with it instead of staying where they were, which left the torso floating off the legs.
+     */
+    public static void lean(net.minecraft.client.model.HumanoidModel<?> m, float angle) {
+        float s = Mth.sin(angle), c = Mth.cos(angle);
+        m.body.xRot = angle;
+        m.rightLeg.y = m.leftLeg.y = 12 * c;
+        m.rightLeg.z = m.leftLeg.z = 12 * s;
+        if (m instanceof net.minecraft.client.model.PlayerModel<?> pm) {
+            pm.jacket.copyFrom(m.body);
+            pm.rightPants.copyFrom(m.rightLeg);
+            pm.leftPants.copyFrom(m.leftLeg);
+            pm.rightSleeve.copyFrom(m.rightArm);
+            pm.leftSleeve.copyFrom(m.leftArm);
+        }
     }
 
     /** How far either side of the middle the rush runs. */
@@ -219,7 +243,7 @@ public final class ClawWarpClient {
         if (s == 0) {
             // the grab: he dives in from the far side to where you stand
             float k = CinematicCamera.ease(u, 4, 11);
-            return Mth.lerp(k, -7.5f, 0.6f) - 0.9f;
+            return (Mth.lerp(k, -7.5f, 0.6f) - 0.9f) * dir(0);
         }
         // never stopping: one steady streak from one edge of the place to the other
         float d = dir(s);
@@ -405,13 +429,13 @@ public final class ClawWarpClient {
         float u = local(tt);
         float x = dragX(tt);
         // which way they face along the stage
-        float d = st == 0 ? 1 : dir(st);
+        float d = dir(st);
         boolean grabbed = st > 0 || u >= 11;
         boolean rushing = st > 0 && u >= RUSH_FROM;
         float yawFacing = d > 0 ? -90 : 90;
         Vec3 dragger = origin.add(x, 0, 0);
         // lifted just off their feet, their throat at the height of the dragger's raised hand
-        Vec3 held = grabbed ? dragger.add(0.8 * d, 0.12 + 0.04 * Mth.sin(tt * 1.3f), 0) : origin.add(0.6, 0, 0);
+        Vec3 held = grabbed ? dragger.add(0.8 * d, 0.12 + 0.04 * Mth.sin(tt * 1.3f), 0) : origin.add(0.6 * d, 0, 0);
         // the victim kicks a little while held, then hangs limp after a slash
         float sway = grabbed ? Mth.sin(tt * 0.9f) * (u < RUSH_TO ? 6 : 2) : 0;
         Entity v = mc.level.getEntity(victim);
@@ -502,7 +526,7 @@ public final class ClawWarpClient {
         }
         if (ghostPose > 0) {
             // leaning into it, mid-stride
-            m.body.xRot = 0.4f;
+            lean(m, 0.4f);
             float stride = Mth.sin(age * 1.6f);
             m.rightLeg.xRot = -0.8f * stride;
             m.leftLeg.xRot = 0.8f * stride;

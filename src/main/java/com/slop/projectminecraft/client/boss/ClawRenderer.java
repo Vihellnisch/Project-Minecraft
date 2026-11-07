@@ -174,7 +174,7 @@ public class ClawRenderer extends HumanoidMobRenderer<Claw, PlayerModel<Claw>> {
                 rightArm.zRot = 0.15f;
                 if (gp > 0) {
                     // leaning into it, mid-stride
-                    body.xRot = 0.4f;
+                    ClawWarpClient.lean(this, 0.4f);
                     float stride = Mth.sin(age * 1.6f);
                     rightLeg.xRot = -0.8f * stride;
                     leftLeg.xRot = 0.8f * stride;
