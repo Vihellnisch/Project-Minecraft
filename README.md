@@ -18,6 +18,26 @@ He drops the **Black Silence** gloves and his **Perception-Blocking Mask**: a pl
 
 Invitations turn up in woodland mansion chests (12%), ancient city and end city treasure chests (6%), stronghold chests (5%) and ominous trial vaults (4%).
 
+## The Claw (boss)
+
+Roland also drops **the Black Silence's Book**. Open it (not in creative, not in the Library) and the Head notices: **Baral, the Claw**, tears through space with Serum W and the fight starts right there. He never breaks a block.
+
+- **Trail** (two claw swipes) and **Extirpation** (a short blink, a thrust and a yank back).
+- **Serum R**: an orange line marks his path, then a 30-block charge that burns.
+- **Serum W**: blue marks on you and your pets; he blinks to each and cuts. Break line of sight to lose a mark.
+- **Serum K**: a green orb, and 15% of his health back after 4 s. Hit him for 10% of his health while he holds a serum and he's **groggy** (kneels for 6 s, takes 50% more).
+- **No-Sell**: the first hit of 30+ in the fight does nothing.
+- **Through every floor** (at half health, and after every Tri-serum): a side-on cinematic, the way Library of Ruina shows it. He has you by the throat and rushes you across one place after another (three dimensions from the config, mod dimensions too), a slash at the end of each, then through a void and back for the last cut. The places are real: a slab of each dimension is copied and shown as the backdrop, so nobody actually leaves, no loading screens. The slashes before the last one can't kill. Anyone watching sees you held in a blue shimmer.
+- **Tri-serum Cocktail** (below a quarter): untouchable while it takes, then five dashes through you that ignore armour and heal him.
+
+Bring him down and he doesn't die: his claw and serums break, the book you carried is torn into a plain book, and he warps out. He drops the **Broken Claw**, **Broken Serum K/R/W** and his **mask** (a trophy you can wear). Die and he takes the book and goes.
+
+Mend them at a crafting table: Broken Claw + 2 netherite scrap + 2 iron = **Claw Arm**; each broken serum + a glass bottle + a golden apple (K), blaze powder (R) or ender pearl (W) = **Serum K/R/W**; Claw Arm + the three serums = the **Handmade Claw**, worn over your forearm with its three vials on the back of the hand. With it in hand, **B** picks a serum (tap: next one, hold: the wheel) and right-click injects it:
+- **K**: green aura, life steal and regeneration (10 s).
+- **R**: red aura, strength, resistance and speed, and your hits burn (10 s).
+- **W**: an 8-block blink that cuts whatever you pass; the next hit is a big slash (3 s cooldown).
+- **Tri-serum**: all three, stronger, for 20 s. Right-click a mob during it to drag it through the dimensions yourself (the same scene, with you doing the dragging); that ends the boost. Bosses and players just take the slash.
+
 ## E.G.O
 
 | Item | How it works |
@@ -30,6 +50,8 @@ E.G.O skills open with a Limbus-style cut-in in the sin's colour. Coins flip abo
 
 ## Black Silence and Furioso
 **Black Silence**: Roland's gloves from Library of Ruina, worn on both hands (black leather, the flat-lining pulse on the back). They go in the **Curios** hands slot (right-click to put them on), or in the offhand if Curios isn't installed.
+
+**Learning them**: fresh off Roland they only half answer you: stuck on **Random mode** (a new weapon every few hits), no picking a weapon, no Furioso. Read **the Black Silence's Book** and win against the Claw that comes for it, and they answer you fully from then on (kept through death).
 
 **The wheel**: tap **B** to switch to the next weapon, or hold **B** and point at one of his twelve, then let go. With an empty main hand, every attack uses that weapon:
 - pistols and shotgun shoot (hitscan, and an 8-pellet cone)
@@ -48,18 +70,19 @@ Holding a tool or block works as normal, and nothing touches the terrain. **Rand
 The moves are keyframed in Blockbench: `tools/blockbench/furioso.bbmodel` (Animate tab, 1 s = 20 script ticks). After editing, run `python tools/bbmodel_to_furioso.py` to bake them into `FuriosoAnims.java`.
 
 ## Config
-`projectminecraft-common.toml` (E.G.O cooldown multiplier) and `projectminecraft-client.toml` (screen shaders, camera shake, hit stop, impact frames, cinematics). Both are editable in-game through Mods > Project Minecraft > Config.
+`projectminecraft-common.toml` (E.G.O cooldown multiplier; the Claw's health, the dimensions his Serum W visits (any mod's dimension ids, missing ones are skipped) and how hard its slashes hit) and `projectminecraft-client.toml` (screen shaders, camera shake, hit stop, impact frames, cinematics). Both are editable in-game through Mods > Project Minecraft > Config.
 
 ## Building
 JDK 21 is required. `gradlew build` puts the jar in `build/libs/`.
 
-Tours (dev-only visual checks, `src/tour`): delete `run-tour/saves/es_test`, then `gradlew runTourClient -DtourRoland=true` (the reception: invite, models, mask, arena, looks, p1-p5, death, reset) or `-DtourGloves=true` (every weapon held and swung, the model sheet, and a real Furioso). `-DtourOnly=mask,furioso` keeps just the stops whose names contain one of those. Screenshots go to `run-tour/screenshots`.
+Tours (dev-only visual checks, `src/tour`): delete `run-tour/saves/es_test`, then `gradlew runTourClient -DtourRoland=true` (the reception: invite, models, mask, arena, looks, p1-p5, death, reset) or `-DtourGloves=true` (every weapon held and swung, the model sheet, and a real Furioso) or `-DtourClaw=true` (summon, looks, each move, the dimension trip and its safety nets, retreat, losing, the Handmade Claw). `-DtourOnly=mask,furioso` keeps just the stops whose names contain one of those. Screenshots go to `run-tour/screenshots`.
 
 Asset tools (`tools/`):
 - `java tools/GenModels.java src/main/resources`: the E.G.O, Black Silence and Furioso weapon models (palette rows match Random Slop's sheets).
 - `java tools/GenRolandTextures.java src/main/resources [skins|mist|distorted|beast]`: Angelica's hair, the Bygones, Angelica's mist, the distorted weapon textures and the beast (Roland's and Angelica's own skins are the user's art, not generated).
 - `java tools/GenGloveTextures.java src/main/resources`: the gloves' worn texture and icon.
-- `tools/gen_textures.ps1`: the item sprites. `tools/build_sounds.ps1` (ffmpeg): the E.G.O and Furioso sounds; the rest are copies of Random Slop's.
+- `java tools/GenClawTextures.java src/main/resources`: the Claw's skin, his vials and plates, and the Claw item sprites.
+- `tools/gen_textures.ps1`: the item sprites. `tools/build_sounds.ps1` (ffmpeg): the E.G.O, Furioso and Claw sounds; the rest are copies of Random Slop's.
 - `tools/blockbench/furioso.bbmodel` + `python tools/bbmodel_to_furioso.py`: Furioso's keyframes.
 
 ## Credits

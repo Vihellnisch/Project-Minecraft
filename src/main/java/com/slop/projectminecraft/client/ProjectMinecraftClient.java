@@ -45,13 +45,18 @@ public class ProjectMinecraftClient {
         NeoForge.EVENT_BUS.register(RolandClient.class);
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.arsenal.GloveHands.class);
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.arsenal.FuriosoClient.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.boss.ClawClient.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.boss.ClawWarpClient.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.boss.ClawHands.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.boss.ClawEntrance.class);
     }
 
-    /** The Black Silence's gloves (and Furioso's weapons) on every player model. */
+    /** The Black Silence's gloves (and Furioso's weapons), and the Handmade Claw, on every player model. */
     private static void onAddLayers(EntityRenderersEvent.AddLayers event) {
         for (net.minecraft.client.resources.PlayerSkin.Model skin : event.getSkins()) {
             if (event.getSkin(skin) instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer pr) {
                 pr.addLayer(new GloveLayer(pr, event.getEntityModels().bakeLayer(GloveLayer.LAYER)));
+                pr.addLayer(new com.slop.projectminecraft.client.boss.ClawHands.Layer(pr));
             }
         }
     }
@@ -69,11 +74,14 @@ public class ProjectMinecraftClient {
         event.registerLayerDefinition(RolandBeastModel.LAYER, RolandBeastModel::create);
         event.registerLayerDefinition(ByproductModel.LAYER, ByproductModel::create);
         event.registerLayerDefinition(RolandKinRenderer.HAIR_LAYER, RolandKinRenderer::createHair);
+        event.registerLayerDefinition(com.slop.projectminecraft.client.boss.ClawHands.LAYER, com.slop.projectminecraft.client.boss.ClawHands::create);
+        event.registerLayerDefinition(com.slop.projectminecraft.client.boss.ClawRenderer.EXTRAS_LAYER, com.slop.projectminecraft.client.boss.ClawRenderer::createExtras);
     }
 
     private static void onRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.ROLAND.get(), RolandRenderer::new);
         event.registerEntityRenderer(ModEntities.ROLAND_KIN.get(), RolandKinRenderer::new);
+        event.registerEntityRenderer(ModEntities.CLAW.get(), com.slop.projectminecraft.client.boss.ClawRenderer::new);
     }
 
     private static void onReloadListeners(RegisterClientReloadListenersEvent event) {
@@ -90,6 +98,8 @@ public class ProjectMinecraftClient {
         event.registerAbove(VanillaGuiLayers.CROSSHAIR, ProjectMinecraft.id("arsenal_hud"), (g, t) -> ArsenalHud.render(g, t.getGameTimeDeltaPartialTick(true)));
         event.registerAbove(VanillaGuiLayers.CROSSHAIR, ProjectMinecraft.id("roland_fade"), RolandClient::render);
         event.registerAbove(VanillaGuiLayers.CROSSHAIR, ProjectMinecraft.id("boss_subtitles"), BossClient::renderSubtitle);
+        event.registerAbove(VanillaGuiLayers.CROSSHAIR, ProjectMinecraft.id("claw_hud"), (g, t) -> com.slop.projectminecraft.client.boss.ClawClient.renderHud(g, t.getGameTimeDeltaPartialTick(true)));
+        event.registerAboveAll(ProjectMinecraft.id("claw_warp"), com.slop.projectminecraft.client.boss.ClawWarpClient::render);
     }
 
     /** Cutscene letterbox, name cards and screen flashes. */

@@ -68,5 +68,14 @@ MixN @("$Slop\arsenal\iai_draw.ogg", $whoosh, $ring, "$sci\lowFrequency_explosio
 $spin = TmpSynth "aevalsrc='0.4*sin(2*PI*(220+400*t)*t)*(0.6+0.4*sin(2*PI*(12+30*t)*t))*min(1,t*2)':d=1.6" "spin"
 MixN @($spin, "$sci\lowFrequency_explosion_001.ogg", "$imp\impactPunch_heavy_000.ogg") @("volume=1.2", "adelay=900,volume=1.5", "adelay=880,asetrate=44100*0.6,aresample=44100,volume=1.5") "arsenal/rotation" "apad=pad_dur=1,$verb,atrim=0:4,afade=t=out:st=3:d=1"
 
+# ---- the Claw: a W blink, a claw slash, a serum injection, Serum R's charge, the rift he tears open, the shatter
+New-Item -ItemType Directory -Force "$Out\claw" | Out-Null
+Synth "aevalsrc='0.6*(random(0)*2-1)*exp(-14*t)*(1+0.5*sin(2*PI*(3200-2600*t)*t))+0.4*sin(2*PI*(1800-1400*t)*t)*exp(-9*t)':d=0.45,highpass=f=600,aecho=0.5:0.4:40:0.25,volume=2.2,alimiter=limit=0.9" "claw/blink"
+Synth "aevalsrc='0.9*(random(0)*2-1)*exp(-40*t)+0.35*sin(2*PI*2400*t)*exp(-7*t)+0.25*sin(2*PI*3610*t)*exp(-9*t)':d=0.6,highpass=f=900,aecho=0.6:0.4:50:0.2,volume=2.0,alimiter=limit=0.9" "claw/slash"
+Synth "aevalsrc='0.5*(random(0)*2-1)*min(1,t*8)*exp(-2.5*t)+0.6*(random(1)*2-1)*exp(-300*t)':d=0.9,highpass=f=3500,volume=2.4,alimiter=limit=0.9" "claw/inject"
+Synth "aevalsrc='0.7*(random(0)*2-1)*min(1,t*3)*exp(-1.2*max(0,t-0.5))+0.6*sin(2*PI*(60+30*t)*t)*exp(-1.5*t)':d=1.6,lowpass=f=1400,aecho=0.7:0.5:120:0.3,volume=2.6,alimiter=limit=0.9" "claw/charge"
+Synth "aevalsrc='0.5*(random(0)*2-1)*(0.6+0.4*sin(2*PI*31*t))*min(1,t*2)*exp(-0.8*t)+0.45*sin(2*PI*(90+260*t)*t)*min(1,t*3)*exp(-0.7*t)':d=2.4,bandpass=f=1600:width_type=o:w=3,aecho=0.8:0.6:180|420:0.35|0.2,volume=3.0,alimiter=limit=0.9" "claw/rift"
+Synth "aevalsrc='0.4*sin(2*PI*3136*t)*exp(-5*t)+0.35*sin(2*PI*4186*t)*exp(-6*t)+0.3*sin(2*PI*5274*t)*exp(-8*t)+0.25*sin(2*PI*2637*t)*exp(-4*t)+0.8*(random(0)*2-1)*exp(-25*t)':d=1.4,highpass=f=700,aecho=0.7:0.5:90|210:0.3|0.15,volume=2.2,alimiter=limit=0.9" "claw/shatter"
+
 Write-Output "Arsenal sounds built:"
 Get-ChildItem "$Out\arsenal" -Filter *.ogg | ForEach-Object { $_.Name }

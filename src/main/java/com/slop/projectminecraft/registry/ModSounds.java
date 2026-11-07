@@ -39,6 +39,13 @@ public final class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> STING = reg("apocalypse.sting");
     public static final DeferredHolder<SoundEvent, SoundEvent> WEAPON_SWAP = reg("arsenal.weapon_swap");
 
+    public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_BLINK = reg("claw.blink");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_SLASH = reg("claw.slash");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_INJECT = reg("claw.inject");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_CHARGE = reg("claw.charge");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_RIFT = reg("claw.rift");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_SHATTER = reg("claw.shatter");
+
     private static DeferredHolder<SoundEvent, SoundEvent> reg(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(ProjectMinecraft.id(name)));
     }

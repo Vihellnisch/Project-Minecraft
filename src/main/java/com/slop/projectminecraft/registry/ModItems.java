@@ -22,6 +22,25 @@ public final class ModItems {
     public static final DeferredItem<Item> ROLAND_SPAWN_EGG = ITEMS.register("roland_spawn_egg",
             () -> new net.neoforged.neoforge.common.DeferredSpawnEggItem(ModEntities.ROLAND, 0x111111, 0xD8D8D8, new Item.Properties()));
 
+    // the Claw
+    public static final DeferredItem<Item> BLACK_SILENCE_BOOK = ITEMS.register("black_silence_book", com.slop.projectminecraft.item.BlackSilenceBook::new);
+    public static final DeferredItem<Item> CLAW_MASK = ITEMS.register("claw_mask", com.slop.projectminecraft.item.ClawItems.Mask::new);
+    public static final DeferredItem<Item> BROKEN_CLAW = part("broken_claw", net.minecraft.world.item.Rarity.RARE);
+    public static final DeferredItem<Item> BROKEN_SERUM_K = part("broken_serum_k", net.minecraft.world.item.Rarity.RARE);
+    public static final DeferredItem<Item> BROKEN_SERUM_R = part("broken_serum_r", net.minecraft.world.item.Rarity.RARE);
+    public static final DeferredItem<Item> BROKEN_SERUM_W = part("broken_serum_w", net.minecraft.world.item.Rarity.RARE);
+    public static final DeferredItem<Item> CLAW_ARM = part("claw_arm", net.minecraft.world.item.Rarity.EPIC);
+    public static final DeferredItem<Item> SERUM_K = part("serum_k", net.minecraft.world.item.Rarity.EPIC);
+    public static final DeferredItem<Item> SERUM_R = part("serum_r", net.minecraft.world.item.Rarity.EPIC);
+    public static final DeferredItem<Item> SERUM_W = part("serum_w", net.minecraft.world.item.Rarity.EPIC);
+    public static final DeferredItem<Item> HANDMADE_CLAW = ITEMS.register("handmade_claw", com.slop.projectminecraft.item.ClawItems.HandmadeClaw::new);
+    public static final DeferredItem<Item> CLAW_SPAWN_EGG = ITEMS.register("claw_spawn_egg",
+            () -> new net.neoforged.neoforge.common.DeferredSpawnEggItem(ModEntities.CLAW, 0x1A1A1C, 0x3A6CFF, new Item.Properties()));
+
+    private static DeferredItem<Item> part(String id, net.minecraft.world.item.Rarity rarity) {
+        return ITEMS.register(id, () -> new com.slop.projectminecraft.item.ClawItems.Part(id, rarity));
+    }
+
     static {
         // these lived in Random Slop (effectslop) before Project Minecraft: keep them in old worlds
         for (String id : new String[]{"solemn_lament", "magic_bullet", "fourth_match_flame", "black_silence", "library_invitation", "black_silence_mask", "roland_spawn_egg"}) {

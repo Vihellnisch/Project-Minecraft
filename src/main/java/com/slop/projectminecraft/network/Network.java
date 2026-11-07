@@ -18,6 +18,7 @@ public final class Network {
         // ClientNet is only touched inside the lambdas, which never run on a dedicated server
         r.playToClient(FxPayload.TYPE, FxPayload.CODEC, (p, ctx) -> ctx.enqueueWork(() -> ClientNet.fx(p)));
         r.playToClient(ArsenalFxPayload.TYPE, ArsenalFxPayload.CODEC, (p, ctx) -> ctx.enqueueWork(() -> ClientNet.arsenal(p)));
+        r.playToClient(ClawStagePayload.TYPE, ClawStagePayload.CODEC, (p, ctx) -> ctx.enqueueWork(() -> ClientNet.clawStage(p)));
         r.playToServer(ArsenalActionPayload.TYPE, ArsenalActionPayload.CODEC, (p, ctx) -> ctx.enqueueWork(() -> {
             if (ctx.player() instanceof ServerPlayer sp) com.slop.projectminecraft.arsenal.ArsenalServer.onAction(sp, p);
         }));

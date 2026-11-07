@@ -123,7 +123,11 @@ public final class GloveTour {
         }
         if (!ENABLED || mc.player == null || mc.level == null || server == null) return;
         ticks++;
-        if (ticks == 1) onServer(server, GloveTour::placePlayer);
+        if (ticks == 1) onServer(server, p -> {
+            placePlayer(p);
+            // the tour tries every weapon and Furioso: the gloves have to answer fully
+            com.slop.projectminecraft.arsenal.GloveServer.master(p);
+        });
         if (ticks == STAGE_AT) onServer(server, GloveTour::buildStage);
         int since = ticks - FIRST_STOP;
         if (since < 0) {

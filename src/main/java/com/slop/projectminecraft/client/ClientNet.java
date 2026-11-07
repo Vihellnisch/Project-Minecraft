@@ -11,6 +11,10 @@ public final class ClientNet {
         if (p.fx() == FxPayload.BOSS_SAY) com.slop.projectminecraft.client.boss.BossClient.say(p.data(), p.pos(), (int) p.pos2().x);
     }
 
+    public static void clawStage(com.slop.projectminecraft.network.ClawStagePayload p) {
+        com.slop.projectminecraft.client.boss.ClawWarpClient.stage(p);
+    }
+
     public static void arsenal(ArsenalFxPayload p) {
         com.slop.projectminecraft.client.arsenal.ArsenalClient.handle(p);
     }

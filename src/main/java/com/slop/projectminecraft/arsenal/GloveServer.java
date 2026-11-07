@@ -7,6 +7,8 @@ import com.slop.projectminecraft.apocalypse.Destruction;
 import com.slop.projectminecraft.item.ArsenalItems;
 import com.slop.projectminecraft.network.ArsenalFxPayload;
 import com.slop.projectminecraft.network.Network;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -51,11 +53,45 @@ public final class GloveServer {
         return STATES.computeIfAbsent(p.getUUID(), k -> new State());
     }
 
+    // =================================================================== mastery
+
+    /** On a player once they've won against the Claw (kept through death): the gloves answer them fully. */
+    static final String MASTERED = "projectminecraft:gloves_mastered";
+
+    /**
+     * Whether `p` has mastered the gloves. Until then they only half answer: stuck on Random mode, no picking a weapon,
+     * no Furioso. Reading the Black Silence's Book and beating the Claw that comes for it is how they learn.
+     */
+    public static boolean mastered(Player p) {
+        CompoundTag root = p.getPersistentData();
+        return root.getCompound(Player.PERSISTED_NBT_TAG).getBoolean(MASTERED);
+    }
+
+    /** They've won: full access from now on. */
+    public static void master(ServerPlayer p) {
+        if (mastered(p)) return;
+        CompoundTag root = p.getPersistentData();
+        if (!root.contains(Player.PERSISTED_NBT_TAG)) root.put(Player.PERSISTED_NBT_TAG, new CompoundTag());
+        root.getCompound(Player.PERSISTED_NBT_TAG).putBoolean(MASTERED, true);
+        p.displayClientMessage(Component.translatable("message.projectminecraft.gloves.mastered").withStyle(ChatFormatting.GOLD), false);
+        p.level().playSound(null, p.getX(), p.getY(), p.getZ(), com.slop.projectminecraft.registry.ModSounds.FURIOSO_STING.get(), net.minecraft.sounds.SoundSource.PLAYERS, 1.0f, 1.0f);
+        State s = state(p);
+        s.random = false;
+        sync(p, s, false);
+    }
+
     // =================================================================== the wheel
 
     public static void select(ServerPlayer p, int w) {
         if (!Gloves.worn(p)) return;
         State s = state(p);
+        if (!mastered(p)) {
+            // they won't be steered yet: Random mode, and no Furioso
+            p.displayClientMessage(Component.translatable("message.projectminecraft.gloves.locked").withStyle(ChatFormatting.DARK_RED), true);
+            s.random = true;
+            sync(p, s, false);
+            return;
+        }
         if (w == -2) {
             furioso(p, s);
             return;
@@ -67,7 +103,7 @@ public final class GloveServer {
     }
 
     static void furioso(ServerPlayer p, State s) {
-        if (s.mask != ALL || running(p)) return;
+        if (s.mask != ALL || running(p) || !mastered(p)) return;
         Entity e = p.serverLevel().getEntity(s.target);
         if (!(e instanceof LivingEntity v) || !v.isAlive() || v.distanceTo(p) > FURIOSO_RANGE) {
             p.displayClientMessage(Component.translatable("item.projectminecraft.black_silence.no_target").withStyle(ChatFormatting.RED), true);
@@ -245,6 +281,8 @@ public final class GloveServer {
         s.mask |= 1 << w;
         s.last = p.level().getGameTime();
         boolean drawn = false;
+        // not mastered: always Random mode
+        if (!mastered(p)) s.random = true;
         if (s.random && ++s.hits % DRAW_EVERY == 0) {
             s.sel = draw(p, s);
             drawn = true;
@@ -276,8 +314,11 @@ public final class GloveServer {
         }
     }
 
+    /** [player, weapon, mask, target, random, drawn, mastered]. */
     static void sync(ServerPlayer p, State s, boolean drawn) {
-        Network.sendTracking(p, ArsenalFxPayload.of(ArsenalFxPayload.GLOVES, p.getId(), s.sel, s.mask, s.target, s.random ? 1 : 0, drawn ? 1 : 0));
+        boolean m = mastered(p);
+        if (!m) s.random = true;
+        Network.sendTracking(p, ArsenalFxPayload.of(ArsenalFxPayload.GLOVES, p.getId(), s.sel, s.mask, s.target, s.random ? 1 : 0, drawn ? 1 : 0, m ? 1 : 0));
     }
 
     static void clear(UUID id) {

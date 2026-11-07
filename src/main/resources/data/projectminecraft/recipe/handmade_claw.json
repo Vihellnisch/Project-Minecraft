@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    {
+      "item": "projectminecraft:claw_arm"
+    },
+    {
+      "item": "projectminecraft:serum_k"
+    },
+    {
+      "item": "projectminecraft:serum_r"
+    },
+    {
+      "item": "projectminecraft:serum_w"
+    }
+  ],
+  "result": {
+    "id": "projectminecraft:handmade_claw",
+    "count": 1
+  }
+}

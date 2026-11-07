@@ -38,6 +38,7 @@ public final class ArsenalClient {
             case ArsenalFxPayload.EGO -> EgoClient.start(p);
             case ArsenalFxPayload.FURIOSO -> FuriosoClient.start(p);
             case ArsenalFxPayload.ROLAND -> com.slop.projectminecraft.client.boss.RolandClient.handle(p);
+            case ArsenalFxPayload.CLAW -> com.slop.projectminecraft.client.boss.ClawClient.handle(p);
             case ArsenalFxPayload.GLOVES -> GloveClient.state(p);
             case ArsenalFxPayload.GLOVE_ATTACK -> GloveClient.attack(p);
             default -> {}
@@ -173,6 +174,7 @@ public final class ArsenalClient {
     public static void pose(HumanoidModel<?> m, LivingEntity e) {
         GloveClient.pose(m, e);
         FuriosoClient.pose(m, e);
+        com.slop.projectminecraft.client.boss.ClawWarpClient.pose(m, e);
     }
 
     @SubscribeEvent

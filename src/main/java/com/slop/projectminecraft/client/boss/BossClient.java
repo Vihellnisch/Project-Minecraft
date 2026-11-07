@@ -21,8 +21,8 @@ public final class BossClient {
     private BossClient() {}
 
     /** Who can talk: entity id path (lang keys projectminecraft.boss.<id>.*) and subtitle colour. FxPayload BOSS_SAY pos2.x picks one. */
-    private static final String[] SPEAKERS = {"roland", "angelica"};
-    private static final int[] SPEAKER_COLORS = {0xB8B8B8, 0xF4F4FF};
+    private static final String[] SPEAKERS = {"roland", "angelica", "claw"};
+    private static final int[] SPEAKER_COLORS = {0xB8B8B8, 0xF4F4FF, 0x6A9CFF};
     private static final float CHARS_PER_TICK = 1.6f;
 
     private static String line = "";

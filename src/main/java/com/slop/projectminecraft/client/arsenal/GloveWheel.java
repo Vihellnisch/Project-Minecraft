@@ -57,8 +57,16 @@ public class GloveWheel extends Screen {
             icon(g, w, x, y, hot ? 26 : 22);
         }
 
-        // centre: Random, or Furioso when it's earned
+        // centre: Random, or Furioso when it's earned; locked to Random until they've mastered the gloves
         boolean ready = GloveClient.ready(), hot = hovered == CENTER_ID;
+        if (!GloveClient.mastered) {
+            g.fill(cx - CENTER, cy - CENTER, cx + CENTER, cy + CENTER, 0xE0281010);
+            center(g, "RANDOM", cy - 9, 0xFFC8C8C8);
+            center(g, "LOCKED", cy + 2, 0xFFB03030);
+            String[] why = Component.translatable("gui.projectminecraft.black_silence.locked").getString().split("\\n");
+            for (int i = 0; i < why.length; i++) center(g, why[i], cy + RING + SLOT + 10 + i * 11, i == 0 ? 0xFFE0A0A0 : 0xFF9A9A9A);
+            return;
+        }
         int c = ready ? (int) (180 + 75 * Mth.sin(time * 0.4f)) : hot ? 70 : 40;
         g.fill(cx - CENTER, cy - CENTER, cx + CENTER, cy + CENTER, ready ? (0xE0 << 24) | (c << 16) | ((int) (c * 0.75f) << 8) | 0x30 : (0xE0 << 24) | (c << 16) | (c << 8) | c);
         if (ready) {
@@ -112,6 +120,12 @@ public class GloveWheel extends Screen {
 
     /** Letting go picks a weapon; the centre only answers a click, so a quick tap never toggles anything. */
     private void choose(boolean click) {
+        // locked: nothing to choose (the server says why)
+        if (!GloveClient.mastered) {
+            if (hovered >= 0) GloveClient.select(hovered);
+            onClose();
+            return;
+        }
         if (hovered >= 0 && hovered < WEAPONS) GloveClient.select(hovered);
         else if (hovered == CENTER_ID && click) GloveClient.select(GloveClient.ready() ? -2 : -1);
         else if (click) return; // a click on nothing keeps the wheel open

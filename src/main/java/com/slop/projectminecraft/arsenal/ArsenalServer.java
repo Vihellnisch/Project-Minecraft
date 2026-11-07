@@ -20,6 +20,9 @@ public final class ArsenalServer {
                 if (a.ints().length > 0) GloveServer.select(p, a.ints()[0]);
             }
             case ArsenalActionPayload.GLOVE_ATTACK -> GloveServer.attack(p);
+            case ArsenalActionPayload.CLAW_SELECT -> {
+                if (a.ints().length > 0) ClawServer.select(p, a.ints()[0]);
+            }
             default -> {}
         }
     }
@@ -32,6 +35,12 @@ public final class ArsenalServer {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onIncoming(LivingIncomingDamageEvent event) {
         if (!event.isCanceled()) ArsenalEvents.guard(event);
+    }
+
+    /** The wheel needs to know from the start whether the gloves answer this player fully. */
+    @SubscribeEvent
+    public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer p) GloveServer.sync(p, GloveServer.state(p), false);
     }
 
     @SubscribeEvent

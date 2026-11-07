@@ -42,6 +42,9 @@ public class ProjectMinecraft {
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.boss.LibraryArena.class);
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.boss.RolandMoves.class);
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.item.BlackSilenceMask.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.boss.ClawMoves.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.warp.ClawWarp.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.arsenal.ClawServer.class);
     }
 
     public static ResourceLocation id(String path) {

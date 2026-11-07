@@ -96,8 +96,11 @@ public final class GloveClient {
         return (float) Math.max(0, Math.min(1, (READY[w] - mc.level.getGameTime() - partial) / GloveServer.COOLDOWN[w]));
     }
 
+    /** The gloves answer fully (the Claw has been beaten); false until the server says so. */
+    public static boolean mastered;
+
     public static boolean ready() {
-        return mask == GloveServer.ALL && target >= 0;
+        return mastered && mask == GloveServer.ALL && target >= 0;
     }
 
     static void select(int w) {
@@ -113,11 +116,12 @@ public final class GloveClient {
         while (WHEEL_KEY.consumeClick()) {} // the key is read held/released below
         // tap: the next weapon in Roland's order; hold: the wheel (opening a screen releases every key, so this resets)
         boolean usable = mc.screen == null && mc.player != null && Gloves.worn(mc.player) && !FuriosoClient.active(mc.player.getId())
-                && !holdingSlopStaff(mc.player);
+                && !holdingSlopStaff(mc.player)
+                && !com.slop.projectminecraft.client.boss.ClawClient.holdingClaw(mc.player);
         if (usable && WHEEL_KEY.isDown()) {
             if (++wheelHeld == HOLD_TICKS) mc.setScreen(new GloveWheel());
         } else {
-            if (usable && wheelHeld > 0 && wheelHeld < HOLD_TICKS) select((mine() + 1) % WEAPONS);
+            if (usable && wheelHeld > 0 && wheelHeld < HOLD_TICKS && mastered) select((mine() + 1) % WEAPONS);
             wheelHeld = 0;
         }
     }
@@ -162,6 +166,7 @@ public final class GloveClient {
         mask = p.i(2);
         target = p.i(3);
         random = p.i(4) == 1;
+        mastered = p.i(6) == 1;
         if (w != before || p.i(5) == 1) swapAge = 0;
         if (!wasReady && ready()) mc.player.playSound(ModSounds.FURIOSO_STING.get(), 0.8f, 1.4f);
     }

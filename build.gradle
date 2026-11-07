@@ -87,6 +87,9 @@ neoForge {
             systemProperty 'projectminecraft.tour', 'true'
             systemProperty 'projectminecraft.tour.gloves', System.getProperty('tourGloves', 'false')
             systemProperty 'projectminecraft.tour.roland', System.getProperty('tourRoland', 'false')
+            systemProperty 'projectminecraft.tour.trailer', System.getProperty('tourTrailer', 'false')
+            systemProperty 'projectminecraft.tour.claw', System.getProperty('tourClaw', 'false')
+            systemProperty 'projectminecraft.tour.clawtrailer', System.getProperty('tourClawTrailer', 'false')
             systemProperty 'projectminecraft.tour.only', System.getProperty('tourOnly', '')
         }
 

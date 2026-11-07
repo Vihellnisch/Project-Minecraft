@@ -18,6 +18,15 @@
           "name": "projectminecraft:black_silence_mask"
         }
       ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "projectminecraft:black_silence_book"
+        }
+      ]
     }
   ]
 }

@@ -22,6 +22,9 @@ public final class ModEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<RolandKin>> ROLAND_KIN = ENTITIES.register("roland_kin",
             () -> EntityType.Builder.of(RolandKin::new, MobCategory.MONSTER).sized(0.6f, 1.95f).eyeHeight(1.62f).clientTrackingRange(12).build("roland_kin"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<com.slop.projectminecraft.boss.Claw>> CLAW = ENTITIES.register("claw",
+            () -> EntityType.Builder.of(com.slop.projectminecraft.boss.Claw::new, MobCategory.MONSTER).sized(0.6f, 1.95f).eyeHeight(1.62f).clientTrackingRange(12).fireImmune().build("claw"));
+
     static {
         for (String id : new String[]{"roland", "roland_kin"}) ENTITIES.addAlias(ResourceLocation.fromNamespaceAndPath("effectslop", id), ProjectMinecraft.id(id));
     }
@@ -29,5 +32,6 @@ public final class ModEntities {
     public static void onAttributes(EntityAttributeCreationEvent event) {
         event.put(ROLAND.get(), Roland.createAttributes().build());
         event.put(ROLAND_KIN.get(), RolandKin.createAttributes().build());
+        event.put(CLAW.get(), com.slop.projectminecraft.boss.Claw.createAttributes().build());
     }
 }

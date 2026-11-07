@@ -61,6 +61,12 @@ public final class ArsenalItems {
         public BlackSilence() {
             super(Rarity.EPIC, 0);
         }
+
+        @Override
+        public void appendHoverText(net.minecraft.world.item.ItemStack stack, TooltipContext ctx, List<Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
+            super.appendHoverText(stack, ctx, tooltip, flag);
+            tooltip.add(Component.translatable("item.projectminecraft.black_silence.mastery").withStyle(ChatFormatting.DARK_RED));
+        }
     }
 
     /** What the player is looking at, with generous aim assist (a cone), within range. */

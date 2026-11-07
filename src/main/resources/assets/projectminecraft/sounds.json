@@ -161,5 +161,41 @@
     "sounds": [
       "projectminecraft:arsenal/rotation"
     ]
+  },
+  "claw.blink": {
+    "subtitle": "subtitles.projectminecraft.claw.blink",
+    "sounds": [
+      "projectminecraft:claw/blink"
+    ]
+  },
+  "claw.slash": {
+    "subtitle": "subtitles.projectminecraft.claw.slash",
+    "sounds": [
+      "projectminecraft:claw/slash"
+    ]
+  },
+  "claw.inject": {
+    "subtitle": "subtitles.projectminecraft.claw.inject",
+    "sounds": [
+      "projectminecraft:claw/inject"
+    ]
+  },
+  "claw.charge": {
+    "subtitle": "subtitles.projectminecraft.claw.charge",
+    "sounds": [
+      "projectminecraft:claw/charge"
+    ]
+  },
+  "claw.rift": {
+    "subtitle": "subtitles.projectminecraft.claw.rift",
+    "sounds": [
+      "projectminecraft:claw/rift"
+    ]
+  },
+  "claw.shatter": {
+    "subtitle": "subtitles.projectminecraft.claw.shatter",
+    "sounds": [
+      "projectminecraft:claw/shatter"
+    ]
   }
 }
