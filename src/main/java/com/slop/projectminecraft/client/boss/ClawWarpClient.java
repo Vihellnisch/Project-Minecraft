@@ -475,6 +475,11 @@ public final class ClawWarpClient {
         e.yRotO = yaw;
         e.setXRot(0);
         e.xRotO = 0;
+        // drawn standing: holding sneak (or being squeezed into a crawl) would put vanilla's crouch under the grab pose
+        net.minecraft.world.entity.Pose was = e.getPose();
+        boolean shift = e.isShiftKeyDown();
+        e.setPose(net.minecraft.world.entity.Pose.STANDING);
+        e.setShiftKeyDown(false);
         pose.pushPose();
         pose.translate(at.x, at.y, at.z);
         if (tilt != 0) {
@@ -483,8 +488,13 @@ public final class ClawWarpClient {
             pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(tilt));
             pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(yaw));
         }
-        mc.getEntityRenderDispatcher().render(e, 0, 0, 0, yaw, partial, pose, buffers, 0xF000F0);
-        pose.popPose();
+        try {
+            mc.getEntityRenderDispatcher().render(e, 0, 0, 0, yaw, partial, pose, buffers, 0xF000F0);
+        } finally {
+            pose.popPose();
+            e.setPose(was);
+            e.setShiftKeyDown(shift);
+        }
         e.setYRot(yr);
         e.yRotO = yro;
         e.setXRot(xr);

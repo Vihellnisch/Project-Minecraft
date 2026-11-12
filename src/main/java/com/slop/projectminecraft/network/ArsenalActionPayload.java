@@ -11,6 +11,10 @@ public record ArsenalActionPayload(byte action, double x, double y, double z, in
     public static final byte GLOVE_SELECT = 5;   // ints = [weapon, or -1 toggle random, or -2 Furioso] (Black Silence wheel)
     public static final byte GLOVE_ATTACK = 6;   // an empty-handed attack with the worn Black Silence
     public static final byte CLAW_SELECT = 7;    // ints = [serum] (the Handmade Claw's wheel)
+    public static final byte VERG_CHOICE = 8;    // ints = [Vergilius id, 1 = draw, 0 = show him the hitlist]
+    public static final byte GLADIUS_SELECT = 9; // ints = [skill] (the gladius's wheel)
+    public static final byte EYE_SLOT = 10;      // swap the carried stack with the eye slot (inventory screen)
+    public static final byte EYE_LOOK = 11;      // ints = [glow 1/0, face mask low 32 bits, high 32 bits] (the eyes' look)
 
     public static final Type<ArsenalActionPayload> TYPE = new Type<>(ProjectMinecraft.id("arsenal_action"));
     public static final StreamCodec<FriendlyByteBuf, ArsenalActionPayload> CODEC = StreamCodec.of(

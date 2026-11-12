@@ -164,7 +164,10 @@ public class RolandRenderer extends HumanoidMobRenderer<Roland, PlayerModel<Rola
             pose.scale(s, s, s);
             pose.translate(0, (1 - s) * 0.75, 0);
             int c = FastColor.ARGB32.color((int) (a * 255), 18, 18, 22);
-            getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.entityTranslucent(MISTY)), light, OverlayTexture.NO_OVERLAY, c);
+            // culled: only the shell's outside, not its inside seen through the front of it
+            if (mist) com.slop.projectminecraft.client.render.FxRenderTypes.depthPrepass(buffers, MISTY,
+                    vc -> getParentModel().renderToBuffer(pose, vc, light, OverlayTexture.NO_OVERLAY, c));
+            getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.entityTranslucentCull(MISTY)), light, OverlayTexture.NO_OVERLAY, c);
             pose.popPose();
         }
     }

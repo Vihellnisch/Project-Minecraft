@@ -79,6 +79,12 @@ public final class ClawServer {
         sync(p, true);
     }
 
+    /** /projectminecraft cooldowns: every serum ready again. */
+    public static void resetCooldowns(ServerPlayer p) {
+        java.util.Arrays.fill(state(p).ready, 0);
+        sync(p, true);
+    }
+
     // =================================================================== injecting
 
     /** Right-click with the claw: the selected serum, or the dimension slash while the cocktail runs. */

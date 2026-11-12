@@ -173,7 +173,7 @@ public class RolandKinRenderer extends EntityRenderer<RolandKin> {
         }
 
         static float alpha(RolandKin k, float age) {
-            if (k.kind() == RolandKin.ANGELICA) return k.fallen() ? 0.22f + 0.06f * Mth.sin(age * 0.2f) : 0.8f + 0.06f * Mth.sin(age * 0.1f);
+            if (k.kind() == RolandKin.ANGELICA) return k.fallen() ? 0.22f + 0.06f * Mth.sin(age * 0.2f) : 0.9f + 0.05f * Mth.sin(age * 0.1f);
             return 0.5f + 0.08f * Mth.sin(age * 0.15f + k.getId());
         }
     }
@@ -189,7 +189,18 @@ public class RolandKinRenderer extends EntityRenderer<RolandKin> {
             boolean angelica = k.kind() == RolandKin.ANGELICA;
             int c = angelica ? FastColor.ARGB32.color((int) (a * 255), 250, 250, 255) : FastColor.ARGB32.color((int) (a * 255), 200, 210, 230);
             ResourceLocation tex = angelica ? MIST : BYGONE;
-            getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(tex)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, c);
+            // her shape into the depth buffer first, then the see-through pass culled: only her front surface shows (no back of
+            // her head or her hair seen through her face). Translucent at full brightness, not the emissive type: shader packs
+            // treat emissive as a light source and bloom her white.
+            if (angelica && a >= 0.85f) {
+                // fully there: solid, as any mob is (shader packs draw see-through entities far thinner than vanilla, and her pale
+                // face washed out into the sky); the halo below keeps the mist about her
+                getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.entityCutout(tex)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0xFFFAFAFF);
+            } else {
+                com.slop.projectminecraft.client.render.FxRenderTypes.depthPrepass(buffers, tex,
+                        vc -> getParentModel().renderToBuffer(pose, vc, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, c));
+                getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.entityTranslucentCull(tex)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, c);
+            }
             if (!angelica) return;
             // a soft white haze around her, breathing
             pose.pushPose();
@@ -197,7 +208,7 @@ public class RolandKinRenderer extends EntityRenderer<RolandKin> {
             pose.scale(s, s, s);
             pose.translate(0, (1 - s) * 0.75, 0);
             int halo = FastColor.ARGB32.color((int) (a * 70), 255, 255, 255);
-            getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(MIST)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, halo);
+            getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.entityTranslucentCull(MIST)), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, halo);
             pose.popPose();
         }
     }
@@ -220,7 +231,7 @@ public class RolandKinRenderer extends EntityRenderer<RolandKin> {
             getParentModel().head.translateAndRotate(pose);
             // the long fall of it sways behind her, not with her head
             pose.mulPose(Axis.XP.rotation(-getParentModel().head.xRot + 0.08f + Mth.sin(age * 0.06f) * 0.05f));
-            var vc = buffers.getBuffer(RenderType.entityTranslucentEmissive(HAIR));
+            var vc = buffers.getBuffer(RenderType.entityTranslucentCull(HAIR));
             back.render(pose, vc, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, c);
             sides.render(pose, vc, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, c);
             pose.popPose();

@@ -37,6 +37,13 @@ public final class ModItems {
     public static final DeferredItem<Item> CLAW_SPAWN_EGG = ITEMS.register("claw_spawn_egg",
             () -> new net.neoforged.neoforge.common.DeferredSpawnEggItem(ModEntities.CLAW, 0x1A1A1C, 0x3A6CFF, new Item.Properties()));
 
+    // Vergilius
+    public static final DeferredItem<Item> HITLIST = ITEMS.register("hitlist", com.slop.projectminecraft.item.Hitlist::new);
+    public static final DeferredItem<Item> WHITE_HOT_GLADIUS = ITEMS.register("white_hot_gladius", com.slop.projectminecraft.item.WhiteHotGladius::new);
+    public static final DeferredItem<Item> VERGILIUS_EYES = ITEMS.register("vergilius_eyes", com.slop.projectminecraft.item.VergiliusEyes::new);
+    public static final DeferredItem<Item> VERGILIUS_SPAWN_EGG = ITEMS.register("vergilius_spawn_egg",
+            () -> new net.neoforged.neoforge.common.DeferredSpawnEggItem(ModEntities.VERGILIUS, 0x2A2A2E, 0xC81C22, new Item.Properties()));
+
     private static DeferredItem<Item> part(String id, net.minecraft.world.item.Rarity rarity) {
         return ITEMS.register(id, () -> new com.slop.projectminecraft.item.ClawItems.Part(id, rarity));
     }

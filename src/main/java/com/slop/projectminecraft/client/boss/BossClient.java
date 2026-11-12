@@ -21,8 +21,8 @@ public final class BossClient {
     private BossClient() {}
 
     /** Who can talk: entity id path (lang keys projectminecraft.boss.<id>.*) and subtitle colour. FxPayload BOSS_SAY pos2.x picks one. */
-    private static final String[] SPEAKERS = {"roland", "angelica", "claw"};
-    private static final int[] SPEAKER_COLORS = {0xB8B8B8, 0xF4F4FF, 0x6A9CFF};
+    private static final String[] SPEAKERS = {"roland", "angelica", "claw", "vergilius"};
+    private static final int[] SPEAKER_COLORS = {0xB8B8B8, 0xF4F4FF, 0x6A9CFF, 0xD83030};
     private static final float CHARS_PER_TICK = 1.6f;
 
     private static String line = "";
@@ -36,6 +36,10 @@ public final class BossClient {
         int s = Math.floorMod(who, SPEAKERS.length);
         if (id == Roland.BANNER) {
             bossBanner(Component.translatable("entity.projectminecraft." + SPEAKERS[s]), Component.translatable("projectminecraft.boss." + SPEAKERS[s] + ".title"), SPEAKER_COLORS[s]);
+            return;
+        }
+        if (id == com.slop.projectminecraft.boss.Claw.REBUILT_BANNER && SPEAKERS[s].equals("claw")) {
+            bossBanner(Component.translatable("entity.projectminecraft." + SPEAKERS[s]), Component.translatable("projectminecraft.boss." + SPEAKERS[s] + ".title_rebuilt"), 0xFF4A3A);
             return;
         }
         speaker = s;
@@ -63,7 +67,8 @@ public final class BossClient {
         String who = Component.translatable("entity.projectminecraft." + SPEAKERS[speaker]).getString() + ": ";
         int w = g.guiWidth(), h = g.guiHeight();
         int tw = font.width(who) + font.width(line);
-        int x = (w - tw) / 2, y = h - (CinematicCamera.active() ? 52 : 72);
+        // clear of the action bar (the Soul Link and haze meters are shown there) and the held item's name
+        int x = (w - tw) / 2, y = h - (CinematicCamera.active() ? 52 : 100);
         g.fill(x - 6, y - 4, x + tw + 6, y + 12, (alpha * 3 / 5) << 24);
         g.drawString(font, who, x, y, (alpha << 24) | SPEAKER_COLORS[speaker], true);
         g.drawString(font, shown, x + font.width(who), y, (alpha << 24) | 0xFFFFFF, true);

@@ -1,0 +1,26 @@
+{
+ "loader": "neoforge:separate_transforms",
+ "base": {
+  "parent": "projectminecraft:item/white_hot_gladius_3d"
+ },
+ "perspectives": {
+  "gui": {
+   "parent": "minecraft:item/handheld",
+   "textures": {
+    "layer0": "projectminecraft:item/white_hot_gladius"
+   }
+  },
+  "ground": {
+   "parent": "minecraft:item/handheld",
+   "textures": {
+    "layer0": "projectminecraft:item/white_hot_gladius"
+   }
+  },
+  "fixed": {
+   "parent": "minecraft:item/handheld",
+   "textures": {
+    "layer0": "projectminecraft:item/white_hot_gladius"
+   }
+  }
+ }
+}

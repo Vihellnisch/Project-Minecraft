@@ -336,7 +336,7 @@ public class GloveLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Ab
             if (distorted) mist(pose, buffers, model);
             return;
         }
-        com.mojang.blaze3d.vertex.VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucentEmissive(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS));
+        com.mojang.blaze3d.vertex.VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucent(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS)); // not emissive: shader packs bloom that
         pose.pushPose();
         pose.translate(-0.5f, -0.5f, -0.5f);
         for (net.minecraft.core.Direction d : net.minecraft.core.Direction.values()) {

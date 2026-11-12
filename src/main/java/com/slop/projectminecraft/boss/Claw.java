@@ -48,6 +48,8 @@ public class Claw extends Monster {
     public static final int SERUM_K = 1, SERUM_R = 2, SERUM_W = 4;
     /** Subtitle lines (lang: projectminecraft.boss.claw.line.N); BANNER is the name card (Roland.BANNER). */
     public static final int LINE_ARRIVE = 0, LINE_TAUNT = 1, LINE_RETREAT = 2, LINE_LEAVE = 3, SPEAKER = 2;
+    /** The rebuilt Claw's name card (BossClient: "Baral / Rebuilt"). */
+    public static final int REBUILT_BANNER = 90;
     public static final int ARRIVE_TICKS = 160, RETREAT_TICKS = 156, LEAVE_TICKS = 40;
     /**
      * The entrance, in ticks of ARRIVE: space tears open (to E_OPEN), the claw reaches out of it (E_CLAW), grips the edge
@@ -70,6 +72,8 @@ public class Claw extends Monster {
     private static final EntityDataAccessor<Byte> DATA_POSE = SynchedEntityData.defineId(Claw.class, EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<Byte> DATA_SERUMS = SynchedEntityData.defineId(Claw.class, EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<Boolean> DATA_BROKEN = SynchedEntityData.defineId(Claw.class, EntityDataSerializers.BOOLEAN);
+    /** The rematch (the warn path): broken parts replaced with stronger ones, heavier serum doses. */
+    private static final EntityDataAccessor<Boolean> DATA_REBUILT = SynchedEntityData.defineId(Claw.class, EntityDataSerializers.BOOLEAN);
     /** Ticks into the entrance (ARRIVE), for the client's cutscene. */
     private static final EntityDataAccessor<Integer> DATA_ENTRANCE = SynchedEntityData.defineId(Claw.class, EntityDataSerializers.INT);
 
@@ -77,6 +81,9 @@ public class Claw extends Monster {
     /** Who holds the book he came for. */
     @Nullable
     UUID quarry;
+    /** The rematch: Vergilius, fighting beside his quarry. */
+    @Nullable
+    public UUID ally;
     int stateT, lostTicks;
     boolean loaded;
 
@@ -113,7 +120,7 @@ public class Claw extends Monster {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder b) {
         super.defineSynchedData(b);
-        b.define(DATA_STATE, FIGHT).define(DATA_POSE, POSE_STAND).define(DATA_SERUMS, (byte) 0).define(DATA_BROKEN, false).define(DATA_ENTRANCE, 0);
+        b.define(DATA_STATE, FIGHT).define(DATA_POSE, POSE_STAND).define(DATA_SERUMS, (byte) 0).define(DATA_BROKEN, false).define(DATA_REBUILT, false).define(DATA_ENTRANCE, 0);
     }
 
     @Override
@@ -148,6 +155,15 @@ public class Claw extends Monster {
         return entityData.get(DATA_BROKEN);
     }
 
+    /** The rebuilt Claw of the rematch. */
+    public boolean rebuilt() {
+        return entityData.get(DATA_REBUILT);
+    }
+
+    public void setRebuilt(boolean r) {
+        entityData.set(DATA_REBUILT, r);
+    }
+
     public int groggyTicks() {
         return groggy;
     }
@@ -175,6 +191,12 @@ public class Claw extends Monster {
     /** Ticks into the entrance, with partials (ARRIVE_TICKS once he's out). */
     public float entrance(float partial) {
         return state() == ARRIVE ? entityData.get(DATA_ENTRANCE) + partial : ARRIVE_TICKS;
+    }
+
+    /** Vergilius beside his quarry, if this is the rematch and he's here. */
+    @Nullable
+    public Vergilius allyEntity() {
+        return ally != null && level() instanceof ServerLevel sl && sl.getEntity(ally) instanceof Vergilius v && v.isAlive() ? v : null;
     }
 
     public float hp() {
@@ -281,10 +303,15 @@ public class Claw extends Monster {
             case E_GRIP -> {
                 sound(level, ModSounds.CLAW_CHARGE.get(), 1.6f, 1.3f);
                 sound(level, SoundEvents.GLASS_BREAK, 1.4f, 0.7f);
+                if (rebuilt()) {
+                    sound(level, ModSounds.CLAW_ROAR.get(), 2.5f, 0.9f);
+                    sound(level, SoundEvents.GENERIC_EXPLODE.value(), 1.2f, 0.6f);
+                }
             }
             case E_STEP -> {
                 sound(level, SoundEvents.WARDEN_STEP, 2.5f, 0.6f);
-                sound(level, SoundEvents.ANVIL_LAND, 0.6f, 0.5f);
+                sound(level, SoundEvents.ANVIL_LAND, rebuilt() ? 1.6f : 0.6f, 0.5f);
+                if (rebuilt()) sound(level, SoundEvents.GENERIC_EXPLODE.value(), 1.4f, 0.5f);
             }
             case E_BODY -> sound(level, SoundEvents.BEACON_DEACTIVATE, 1.6f, 0.7f);
             case E_HEAD -> setSerums(SERUM_K);
@@ -297,7 +324,7 @@ public class Claw extends Monster {
             }
             case E_SNAP + 3 -> sound(level, SoundEvents.ARMOR_EQUIP_NETHERITE.value(), 2.0f, 0.5f);
             case E_LINE -> say(LINE_ARRIVE);
-            case E_BANNER -> say(Roland.BANNER);
+            case E_BANNER -> say(rebuilt() ? REBUILT_BANNER : Roland.BANNER);
             default -> {}
         }
         // a chime as each vial lights
@@ -326,6 +353,11 @@ public class Claw extends Monster {
                 setInvisible(false);
                 setSerums(0);
                 setBodyPose(POSE_STAND);
+            }
+            // the rematch: no book to take; his quarry down is the end of it
+            if (rebuilt() && (p == null || !p.isAlive())) {
+                leave(level, false);
+                return;
             }
             if (++lostTicks > 600) leave(level, false);
             return;
@@ -358,6 +390,9 @@ public class Claw extends Monster {
         // the one whose book it was, and whoever brought him down, have learned the gloves
         if (quarryP != null) com.slop.projectminecraft.arsenal.GloveServer.master(quarryP);
         if (by instanceof ServerPlayer sp) com.slop.projectminecraft.arsenal.GloveServer.master(sp);
+        // the rematch won: Vergilius walks with you now
+        Vergilius v = allyEntity();
+        if (v != null) v.onClawBeaten();
         // and he stays where his rift opens: no falling, floating or sliding off
         setNoGravity(true);
         setSerums(0);
@@ -398,16 +433,26 @@ public class Claw extends Monster {
                 sound(level, SoundEvents.GLASS_BREAK, 2.0f, 0.6f);
                 sound(level, SoundEvents.ANVIL_BREAK, 1.4f, 0.8f);
                 sound(level, SoundEvents.ITEM_BREAK, 1.6f, 0.6f);
-                fling(level, ModItems.BROKEN_CLAW.get(), 0.6, 0.6, 0.3, new Vec3(0.22, 0.28, 0.12));
-                fling(level, ModItems.BROKEN_SERUM_K.get(), 0.15, 1.9, 0.1, new Vec3(-0.08, 0.32, 0.1));
-                fling(level, ModItems.BROKEN_SERUM_W.get(), 0.5, 1.45, 0.0, new Vec3(0.16, 0.3, 0.04));
-                fling(level, ModItems.BROKEN_SERUM_R.get(), 0.6, 1.0, 0.1, new Vec3(0.2, 0.22, 0.14));
+                if (rebuilt()) {
+                    // the rebuilt parts hold together better: one comes off whole (the claw arm, or one of the serums)
+                    net.minecraft.world.item.Item[] whole = {ModItems.CLAW_ARM.get(), ModItems.SERUM_K.get(), ModItems.SERUM_R.get(), ModItems.SERUM_W.get()};
+                    fling(level, whole[random.nextInt(whole.length)], 0.6, 1.0, 0.2, new Vec3(0.2, 0.28, 0.14));
+                } else {
+                    fling(level, ModItems.BROKEN_CLAW.get(), 0.6, 0.6, 0.3, new Vec3(0.22, 0.28, 0.12));
+                    fling(level, ModItems.BROKEN_SERUM_K.get(), 0.15, 1.9, 0.1, new Vec3(-0.08, 0.32, 0.1));
+                    fling(level, ModItems.BROKEN_SERUM_W.get(), 0.5, 1.45, 0.0, new Vec3(0.16, 0.3, 0.04));
+                    fling(level, ModItems.BROKEN_SERUM_R.get(), 0.6, 1.0, 0.1, new Vec3(0.2, 0.22, 0.14));
+                }
             }
             case R_MASK -> {
                 // the mask splits and a chunk breaks away (his face stays hidden; what's left of the mask is the trophy)
                 sound(level, SoundEvents.WOOD_BREAK, 2.0f, 0.7f);
                 sound(level, SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, 0.5f, 1.5f);
                 fling(level, ModItems.CLAW_MASK.get(), 0, 1.3, 0.4, new Vec3(0, 0.18, 0.2));
+                // and from his coat, a folded page: the Head's hitlist (not from the rebuilt Claw, and not if you're still on one)
+                ServerPlayer q = quarryPlayer();
+                if (!rebuilt() && (q == null || !com.slop.projectminecraft.item.Hitlist.hasOpen(q)))
+                    fling(level, ModItems.HITLIST.get(), -0.3, 1.1, 0.3, new Vec3(-0.12, 0.2, 0.18));
             }
             case R_LINE -> say(LINE_RETREAT);
             case R_INJECT -> sound(level, ModSounds.CLAW_INJECT.get(), 1.4f, 0.7f);
@@ -439,6 +484,8 @@ public class Claw extends Monster {
             ServerPlayer p = quarryPlayer();
             if (p != null) ClawMoves.releaseBook(p);
         }
+        Vergilius v = allyEntity();
+        if (v != null) v.onRematchLost();
         note(took ? "took the book" : "left");
     }
 

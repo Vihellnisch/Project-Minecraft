@@ -39,6 +39,7 @@ public final class ArsenalClient {
             case ArsenalFxPayload.FURIOSO -> FuriosoClient.start(p);
             case ArsenalFxPayload.ROLAND -> com.slop.projectminecraft.client.boss.RolandClient.handle(p);
             case ArsenalFxPayload.CLAW -> com.slop.projectminecraft.client.boss.ClawClient.handle(p);
+            case ArsenalFxPayload.VERGILIUS -> com.slop.projectminecraft.client.boss.VergiliusClient.handle(p);
             case ArsenalFxPayload.GLOVES -> GloveClient.state(p);
             case ArsenalFxPayload.GLOVE_ATTACK -> GloveClient.attack(p);
             default -> {}

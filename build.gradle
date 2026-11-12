@@ -90,6 +90,7 @@ neoForge {
             systemProperty 'projectminecraft.tour.trailer', System.getProperty('tourTrailer', 'false')
             systemProperty 'projectminecraft.tour.claw', System.getProperty('tourClaw', 'false')
             systemProperty 'projectminecraft.tour.clawtrailer', System.getProperty('tourClawTrailer', 'false')
+            systemProperty 'projectminecraft.tour.vergilius', System.getProperty('tourVergilius', 'false')
             systemProperty 'projectminecraft.tour.only', System.getProperty('tourOnly', '')
         }
 

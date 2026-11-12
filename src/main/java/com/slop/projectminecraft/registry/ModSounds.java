@@ -45,6 +45,15 @@ public final class ModSounds {
     public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_CHARGE = reg("claw.charge");
     public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_RIFT = reg("claw.rift");
     public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_SHATTER = reg("claw.shatter");
+    // Vergilius
+    public static final DeferredHolder<SoundEvent, SoundEvent> VERG_SLASH = reg("vergilius.slash");
+    public static final DeferredHolder<SoundEvent, SoundEvent> VERG_SIZZLE = reg("vergilius.sizzle");
+    public static final DeferredHolder<SoundEvent, SoundEvent> VERG_SPIKE = reg("vergilius.spike");
+    public static final DeferredHolder<SoundEvent, SoundEvent> VERG_LAKE = reg("vergilius.lake");
+    public static final DeferredHolder<SoundEvent, SoundEvent> VERG_BARRIER = reg("vergilius.barrier");
+    public static final DeferredHolder<SoundEvent, SoundEvent> BUS_HORN = reg("vergilius.bus_horn");
+    public static final DeferredHolder<SoundEvent, SoundEvent> BUS_ENGINE = reg("vergilius.bus_engine");
+    public static final DeferredHolder<SoundEvent, SoundEvent> CLAW_ROAR = reg("claw.roar");
 
     private static DeferredHolder<SoundEvent, SoundEvent> reg(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(ProjectMinecraft.id(name)));

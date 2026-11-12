@@ -26,6 +26,7 @@ public class ProjectMinecraft {
         ModEntities.ENTITIES.register(modBus);
         ModLoot.MODIFIERS.register(modBus);
         ModTabs.TABS.register(modBus);
+        com.slop.projectminecraft.arsenal.EyeSlot.ATTACHMENTS.register(modBus);
         modBus.addListener(ModEntities::onAttributes);
         modBus.addListener(Network::register);
         modBus.addListener((net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent e) -> {
@@ -45,6 +46,10 @@ public class ProjectMinecraft {
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.boss.ClawMoves.class);
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.warp.ClawWarp.class);
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.arsenal.ClawServer.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.quest.HitlistTrail.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.arsenal.EyeSlot.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.arsenal.GladiusServer.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.command.ProjectMinecraftCommand.class);
     }
 
     public static ResourceLocation id(String path) {

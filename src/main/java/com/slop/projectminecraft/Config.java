@@ -11,6 +11,22 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue COOLDOWN = C
             .comment("Multiplier for the cooldowns of the E.G.O weapons.")
             .defineInRange("cooldownMultiplier", 1.0, 0.0, 10.0);
+    static { C.push("gloves"); }
+    public static final ModConfigSpec.DoubleValue GLOVE_DAMAGE = C
+            .comment("Multiplier for the Black Silence gloves' damage: every workshop weapon and Furioso (raise it for modpacks with tougher mobs).")
+            .defineInRange("damage", 1.0, 0.0, 100.0);
+    public static final ModConfigSpec.IntValue RANDOM_SWAP_HITS = C
+            .comment("Random mode: how many hits before the gloves switch to another weapon (1 = a new weapon after every hit).")
+            .defineInRange("randomSwapHits", 3, 1, 50);
+    public static final ModConfigSpec.IntValue FURIOSO_SWITCH_GRACE = C
+            .comment("Furioso needs all twelve weapons on one enemy. Hitting a different enemy only makes it the new Furioso target",
+                    "(and starts the count again) once your current target hasn't been hit for this many seconds. 0 = at once.")
+            .defineInRange("furiosoSwitchGrace", 0, 0, 120);
+    public static final ModConfigSpec.BooleanValue FURIOSO_KEEP_PROGRESS = C
+            .comment("If true, the weapons you've used count no matter which enemies they hit: switching enemies (or the one you were",
+                    "hitting dying) never resets the count, and Furioso goes on whoever you hit last.")
+            .define("furiosoKeepProgress", false);
+    static { C.pop(); }
     static { C.push("claw"); }
     public static final ModConfigSpec.DoubleValue CLAW_HEALTH = C
             .comment("The Claw's health.")
@@ -23,6 +39,20 @@ public final class Config {
     public static final ModConfigSpec.DoubleValue WARP_DAMAGE = C
             .comment("Serum W's dimension slash: total damage as a fraction of the victim's max health (armour ignored).")
             .defineInRange("warpDamage", 0.35, 0.0, 1.0);
+    static { C.pop(); }
+    static { C.push("vergilius"); }
+    public static final ModConfigSpec.DoubleValue VERGILIUS_HEALTH = C
+            .comment("Vergilius's health.")
+            .defineInRange("health", 600.0, 50.0, 6000.0);
+    public static final ModConfigSpec.DoubleValue VERGILIUS_DAMAGE = C
+            .comment("Multiplier for the damage Vergilius deals as a boss (his companion damage is a share of it).")
+            .defineInRange("damage", 1.0, 0.0, 10.0);
+    public static final ModConfigSpec.DoubleValue REBUILT_CLAW_HEALTH = C
+            .comment("The rebuilt Claw (the rematch beside Vergilius): his health as a multiple of the Claw's.")
+            .defineInRange("rebuiltClawHealth", 1.6, 0.5, 10.0);
+    public static final ModConfigSpec.IntValue TRAIL_DISTANCE = C
+            .comment("How far from where the hitlist is first opened the trail starts (blocks).")
+            .defineInRange("trailDistance", 600, 64, 5000);
     static { C.pop(); }
     public static final ModConfigSpec COMMON_SPEC = C.build();
 

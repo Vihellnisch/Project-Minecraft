@@ -25,6 +25,13 @@ public final class ModEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<com.slop.projectminecraft.boss.Claw>> CLAW = ENTITIES.register("claw",
             () -> EntityType.Builder.of(com.slop.projectminecraft.boss.Claw::new, MobCategory.MONSTER).sized(0.6f, 1.95f).eyeHeight(1.62f).clientTrackingRange(12).fireImmune().build("claw"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<com.slop.projectminecraft.boss.Vergilius>> VERGILIUS = ENTITIES.register("vergilius",
+            () -> EntityType.Builder.of(com.slop.projectminecraft.boss.Vergilius::new, MobCategory.MONSTER).sized(0.6f, 1.95f).eyeHeight(1.62f).clientTrackingRange(12).fireImmune().build("vergilius"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.slop.projectminecraft.boss.LimbusBus>> LIMBUS_BUS = ENTITIES.register("limbus_bus",
+            () -> EntityType.Builder.<com.slop.projectminecraft.boss.LimbusBus>of(com.slop.projectminecraft.boss.LimbusBus::new, MobCategory.MISC).sized(3.2f, 4.0f)
+                    .clientTrackingRange(16).updateInterval(1).noSave().noSummon().build("limbus_bus"));
+
     static {
         for (String id : new String[]{"roland", "roland_kin"}) ENTITIES.addAlias(ResourceLocation.fromNamespaceAndPath("effectslop", id), ProjectMinecraft.id(id));
     }
@@ -33,5 +40,6 @@ public final class ModEntities {
         event.put(ROLAND.get(), Roland.createAttributes().build());
         event.put(ROLAND_KIN.get(), RolandKin.createAttributes().build());
         event.put(CLAW.get(), com.slop.projectminecraft.boss.Claw.createAttributes().build());
+        event.put(VERGILIUS.get(), com.slop.projectminecraft.boss.Vergilius.createAttributes().build());
     }
 }

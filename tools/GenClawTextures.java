@@ -35,6 +35,42 @@ public class GenClawTextures {
         }
         if (only.isEmpty() || only.equals("extras")) write(res, TEX + "entity/claw/claw_extras.png", 64, 64, GenClawTextures::extras);
         if (only.isEmpty() || only.equals("items")) items(res);
+        if (only.isEmpty() || only.equals("rebuilt")) rebuilt(res);
+    }
+
+    // ------------------------------------------------------------------ the rebuilt Claw (the rematch)
+
+    /**
+     * Rebuilt: the same man, the arm replaced with polished gunmetal (claw_rebuilt), the plates and blades bright steel and
+     * the vials' glass a stronger colour (claw_extras_rebuilt), and his eyes burning behind the mask's holes (claw_eyes).
+     */
+    static void rebuilt(String res) throws IOException {
+        write(res, TEX + "entity/claw/claw_rebuilt.png", 64, 64, () -> {
+            skin();
+            R.setSeed(4040);
+            // the prosthetic left arm: polished dark steel, a lit edge down each face, plate seams
+            part(32, 48, 4, 12, 4, 0x3A3E46, 6);
+            for (int y = 0; y < 12; y += 3) fill(32, 52 + y, 16, 1, 0x1E2026, 2);
+            for (int x : new int[]{33, 37, 41, 45}) for (int y = 52; y < 64; y++) px(x, y, 0x8A92A0);
+        });
+        write(res, TEX + "entity/claw/claw_extras_rebuilt.png", 64, 64, () -> {
+            R.setSeed(4041);
+            extras();
+            // stronger doses: the glass brighter
+            fill(32, 0, 16, 16, 0x5CFF6C, 8);
+            fill(48, 0, 16, 16, 0x4A8CFF, 8);
+            fill(0, 16, 16, 16, 0xFFB43A, 8);
+            // the plates: gunmetal, polished, bright seams
+            fill(16, 16, 32, 24, 0x40444C, 6);
+            for (int y = 16; y < 40; y += 4) fill(16, y, 32, 1, 0x9AA2B0, 4);
+            for (int i = 0; i < 30; i++) px(16 + R.nextInt(32), 16 + R.nextInt(24), 0xC8D0DC);
+            // the blades: bright steel, clean
+            for (int y = 0; y < 16; y++) fill(48, 16 + y, 16, 1, y % 4 == 0 ? 0xE0E6EE : 0xA8B0BC, 4);
+        });
+        write(res, TEX + "entity/claw/claw_eyes.png", 64, 64, () -> {
+            // the two holes at eye height on the mask's face (8 + 2..5, 8 + 2..3), burning cold blue-white
+            for (int[] h : new int[][]{{2, 2}, {5, 2}, {1, 3}, {6, 3}}) img.setRGB(8 + h[0], 8 + h[1], h[1] == 2 ? 0xFFB8E4FF : 0xFF3A7AFF);
+        });
     }
 
     static void write(String res, String path, int w, int h, Runnable paint) throws IOException {

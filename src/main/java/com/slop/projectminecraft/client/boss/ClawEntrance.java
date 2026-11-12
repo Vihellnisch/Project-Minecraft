@@ -67,6 +67,8 @@ public final class ClawEntrance {
         int missing;
         /** He has been seen arriving (before that, his synced state may still be catching up). */
         boolean seen;
+        /** The rebuilt Claw (the rematch): the rift torn wider, angrier, red in it. */
+        boolean angry;
 
         Entrance(int claw, Vec3 feet, Vec3 f, boolean exit) {
             this.claw = claw;
@@ -149,7 +151,7 @@ public final class ClawEntrance {
             // it jerks open in fits: a stutter on the way
             return 0.02f + HALF_W * (k + 0.08f * Mth.sin(t * 2.7f) * (1 - k));
         }
-        float w = HALF_W * (1 + (PULLED - 1) * CinematicCamera.ease(t, E_GRIP, E_GRIP + 7));
+        float w = HALF_W * (1 + ((e.angry ? 2.0f : PULLED) - 1) * CinematicCamera.ease(t, E_GRIP, E_GRIP + 7));
         w *= 1 + 0.025f * Mth.sin(t * 0.6f);
         if (t >= E_SNAP) w *= 1 - CinematicCamera.ease(t, E_SNAP, E_SNAP + 5);
         return w;
@@ -191,6 +193,7 @@ public final class ClawEntrance {
                 continue;
             }
             e.missing = 0;
+            e.angry = c.rebuilt();
             byte want = e.exit ? RETREAT : ARRIVE;
             if (c.state() == want) e.seen = true;
             else if (!e.seen && ++e.missing <= 40) continue;
@@ -249,6 +252,22 @@ public final class ClawEntrance {
             bolt(e, k, 1);
             flash(0.15f, dist);
             CameraShake.addAt(dist, 0.7f, 30);
+            if (e.angry) {
+                // torn, not opened: a red flash through it, the ground shaking
+                com.slop.projectminecraft.client.ScreenFlash.flash(0.35f);
+                CameraShake.addAt(dist, 1.4f, 40);
+                Shockwaves.add(c, 9, 600, 1.6f);
+                RingFx.add(c, e.f, 0.5f, 5.0f, 14, 1.0f, 0.25f, 0.2f, 0.9f);
+                for (int i = 0; i < 40; i++) spark(level, edge(e, k, R.nextInt(SEGS + 1), R.nextBoolean() ? 1 : -1), 0.6);
+            }
+        }
+        if (k == E_STEP && e.angry) {
+            // the claw slams the ground before he steps out
+            Vec3 slam = e.feet.add(e.left.scale(0.6)).add(e.f.scale(0.4));
+            RingFx.add(slam.add(0, 0.05, 0), new Vec3(0, 1, 0), 0.3f, 5.5f, 14, 1.0f, 0.3f, 0.25f, 0.9f);
+            Shockwaves.add(slam, 10, 600, 2.0f);
+            CameraShake.addAt(dist, 1.6f, 40);
+            if (dist < 30) com.slop.projectminecraft.client.juice.ImpactFrame.trigger(com.slop.projectminecraft.client.juice.ImpactFrame.RED, 140);
         }
         if (k == E_STEP) {
             // the first foot down: a thud, dust, the ground ringing

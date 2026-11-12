@@ -80,6 +80,33 @@ public final class FxRenderTypes extends RenderType {
                         .createCompositeState(false)));
     }
 
+    private static final java.util.Map<net.minecraft.resources.ResourceLocation, RenderType> ENTITY_DEPTH = new java.util.HashMap<>();
+
+    /**
+     * An entity's shape written to the depth buffer only (no colour), culled, cut out by its texture. Drawn just before a
+     * see-through pass of the same model, so that only its front surface shows: no back of the head through the face.
+     */
+    public static RenderType entityDepth(net.minecraft.resources.ResourceLocation tex) {
+        return ENTITY_DEPTH.computeIfAbsent(tex, t -> create("projectminecraft_entity_depth", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 1536, true, false,
+                CompositeState.builder()
+                        .setShaderState(RENDERTYPE_ENTITY_CUTOUT_SHADER)
+                        .setTextureState(new TextureStateShard(t, false, false))
+                        .setTransparencyState(NO_TRANSPARENCY)
+                        .setCullState(CULL)
+                        .setLightmapState(LIGHTMAP)
+                        .setOverlayState(OVERLAY)
+                        .setWriteMaskState(DEPTH_WRITE)
+                        .createCompositeState(true)));
+    }
+
+    /** Draws `draw` into the depth-only type at once (it must land before the see-through pass that follows). */
+    public static void depthPrepass(net.minecraft.client.renderer.MultiBufferSource buffers, net.minecraft.resources.ResourceLocation tex,
+                                    java.util.function.Consumer<VertexConsumer> draw) {
+        RenderType t = entityDepth(tex);
+        draw.accept(buffers.getBuffer(t));
+        if (buffers instanceof net.minecraft.client.renderer.MultiBufferSource.BufferSource bs) bs.endBatch(t);
+    }
+
     // ------------------------------------------------------------ helpers
 
     /** Open tube from a to b (camera relative) with radius ra at a and rb at b. */

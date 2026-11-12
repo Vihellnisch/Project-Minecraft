@@ -36,6 +36,12 @@ public class ClawRenderer extends HumanoidMobRenderer<Claw, PlayerModel<Claw>> {
     /** Beaten: torn and bloodied, the arm wrecked; then the mask split open too. */
     static final ResourceLocation BROKEN = ProjectMinecraft.id("textures/entity/claw/claw_broken.png"),
             CRACKED = ProjectMinecraft.id("textures/entity/claw/claw_cracked.png");
+    /** The rematch: the arm and the claw polished new, the vials stronger, eyes burning behind the mask. */
+    static final ResourceLocation REBUILT = ProjectMinecraft.id("textures/entity/claw/claw_rebuilt.png"),
+            EXTRAS_REBUILT = ProjectMinecraft.id("textures/entity/claw/claw_extras_rebuilt.png"),
+            EYES = ProjectMinecraft.id("textures/entity/claw/claw_eyes.png");
+    /** How much bigger the rebuilt Claw's vials are. */
+    static final float REBUILT_VIALS = 1.25f;
     /** Down on his knees: how far the body drops with both legs folded back under him. */
     static final float KNEEL_DROP = 0.58f, KNEEL_LEGS = 1.35f;
     public static final ModelLayerLocation EXTRAS_LAYER = new ModelLayerLocation(ProjectMinecraft.id("claw"), "extras");
@@ -47,7 +53,7 @@ public class ClawRenderer extends HumanoidMobRenderer<Claw, PlayerModel<Claw>> {
 
     @Override
     public ResourceLocation getTextureLocation(Claw c) {
-        if (!c.broken()) return SKIN;
+        if (!c.broken()) return c.rebuilt() ? REBUILT : SKIN;
         return c.exit(0) >= Claw.R_MASK ? CRACKED : BROKEN;
     }
 
@@ -409,7 +415,10 @@ public class ClawRenderer extends HumanoidMobRenderer<Claw, PlayerModel<Claw>> {
         public void render(PoseStack pose, MultiBufferSource buffers, int light, Claw c, float limb, float limbAmount, float partial, float age, float headYaw, float headPitch) {
             if (c.isInvisible()) return;
             if (c.broken()) drawBroken(getParentModel(), this, pose, buffers, light);
-            else drawExtras(getParentModel(), this, pose, buffers, light, c.serums(), age);
+            else drawExtras(getParentModel(), this, pose, buffers, light, c.serums(), age, c.rebuilt());
+            // rebuilt: his eyes burning behind the mask's holes
+            if (c.rebuilt() && !c.broken() && getParentModel().head.visible)
+                getParentModel().head.render(pose, buffers.getBuffer(RenderType.eyes(EYES)), light, OverlayTexture.NO_OVERLAY);
         }
     }
 
@@ -431,8 +440,11 @@ public class ClawRenderer extends HumanoidMobRenderer<Claw, PlayerModel<Claw>> {
     }
 
     /** The vials and the claw on a posed model; `lit` = which vials glow (Claw.SERUM_*). */
-    static void drawExtras(PlayerModel<?> m, Extras x, PoseStack pose, MultiBufferSource buffers, int light, int lit, float age) {
-        var solid = buffers.getBuffer(RenderType.entityCutoutNoCull(EXTRAS));
+    static void drawExtras(PlayerModel<?> m, Extras x, PoseStack pose, MultiBufferSource buffers, int light, int lit, float age, boolean rebuilt) {
+        ResourceLocation tex = rebuilt ? EXTRAS_REBUILT : EXTRAS;
+        float vs = rebuilt ? REBUILT_VIALS : 1;
+        for (ModelPart p : new ModelPart[]{x.headFrame, x.headGlass, x.shoulderFrame, x.shoulderGlass, x.elbowFrame, x.elbowGlass}) p.xScale = p.yScale = p.zScale = vs;
+        var solid = buffers.getBuffer(RenderType.entityCutoutNoCull(tex));
         int ov = OverlayTexture.NO_OVERLAY;
         // the head's vial only once the head is out of the rift
         if (m.head.visible) {
@@ -440,13 +452,13 @@ public class ClawRenderer extends HumanoidMobRenderer<Claw, PlayerModel<Claw>> {
             m.head.translateAndRotate(pose);
             x.headFrame.render(pose, solid, light, ov);
             if ((lit & Claw.SERUM_K) == 0) x.headGlass.render(pose, solid, light, ov);
-            if ((lit & Claw.SERUM_K) != 0) x.headGlass.render(pose, buffers.getBuffer(RenderType.eyes(EXTRAS)), light, ov);
+            if ((lit & Claw.SERUM_K) != 0) x.headGlass.render(pose, buffers.getBuffer(RenderType.eyes(tex)), light, ov);
             pose.popPose();
         }
         pose.pushPose();
         m.leftArm.translateAndRotate(pose);
         // a batched buffer ends when another one is asked for: fetch it again after the head's glow
-        solid = buffers.getBuffer(RenderType.entityCutoutNoCull(EXTRAS));
+        solid = buffers.getBuffer(RenderType.entityCutoutNoCull(tex));
         // the upper arm's vials come out with his body (in the entrance the claw comes first)
         boolean upper = m.body.visible;
         if (upper) {
@@ -458,7 +470,7 @@ public class ClawRenderer extends HumanoidMobRenderer<Claw, PlayerModel<Claw>> {
         if (upper) x.shoulderPlate.render(pose, solid, light, ov);
         x.plates.render(pose, solid, light, ov);
         x.blades.render(pose, solid, light, ov);
-        var glow = buffers.getBuffer(RenderType.eyes(EXTRAS));
+        var glow = buffers.getBuffer(RenderType.eyes(tex));
         if (upper && (lit & Claw.SERUM_W) != 0) x.shoulderGlass.render(pose, glow, light, ov);
         if (upper && (lit & Claw.SERUM_R) != 0) x.elbowGlass.render(pose, glow, light, ov);
         pose.popPose();

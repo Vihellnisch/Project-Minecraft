@@ -20,7 +20,8 @@ public final class ModTabs {
                 for (var item : java.util.List.of(ModItems.SOLEMN_LAMENT, ModItems.MAGIC_BULLET, ModItems.FOURTH_MATCH_FLAME, ModItems.BLACK_SILENCE,
                         ModItems.LIBRARY_INVITATION, ModItems.BLACK_SILENCE_MASK, ModItems.ROLAND_SPAWN_EGG,
                         ModItems.BLACK_SILENCE_BOOK, ModItems.CLAW_MASK, ModItems.BROKEN_CLAW, ModItems.BROKEN_SERUM_K, ModItems.BROKEN_SERUM_R, ModItems.BROKEN_SERUM_W,
-                        ModItems.CLAW_ARM, ModItems.SERUM_K, ModItems.SERUM_R, ModItems.SERUM_W, ModItems.HANDMADE_CLAW, ModItems.CLAW_SPAWN_EGG)) {
+                        ModItems.CLAW_ARM, ModItems.SERUM_K, ModItems.SERUM_R, ModItems.SERUM_W, ModItems.HANDMADE_CLAW, ModItems.CLAW_SPAWN_EGG,
+                        ModItems.HITLIST, ModItems.WHITE_HOT_GLADIUS, ModItems.VERGILIUS_EYES, ModItems.VERGILIUS_SPAWN_EGG)) {
                     out.accept(item.get());
                 }
             })

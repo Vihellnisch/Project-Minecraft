@@ -104,7 +104,9 @@ public final class ClawMoves {
     // =================================================================== the brain
 
     static void tick(Claw c, ServerLevel level, ServerPlayer p) {
-        for (int i = 0; i < c.cd.length; i++) if (c.cd[i] > 0) c.cd[i]--;
+        // rebuilt: stronger doses, back sooner (cooldowns run a third faster)
+        int ticks = c.rebuilt() && c.tickCount % 3 == 0 ? 2 : 1;
+        for (int i = 0; i < c.cd.length; i++) c.cd[i] = Math.max(0, c.cd[i] - ticks);
         if (c.groggy > 0) {
             c.groggy--;
             c.getNavigation().stop();
@@ -125,22 +127,25 @@ public final class ClawMoves {
             c.setSerums(0);
             c.staggerTaken = -1;
         }
-        c.getLookControl().setLookAt(p, 30, 30);
-        double dist = c.distanceTo(p);
+        // the rematch: now and then he goes for Vergilius instead of you (unless he's down)
+        Vergilius ally = c.allyEntity();
+        LivingEntity t = ally != null && !ally.isDowned() && c.getRandom().nextFloat() < 0.35f ? ally : p;
+        c.getLookControl().setLookAt(t, 30, 30);
+        double dist = c.distanceTo(t);
         // the big ones first: the trip through every floor at half health, the cocktail below a quarter
         if (!c.warpedOnce && c.hp() <= 0.5f) {
             c.warpedOnce = true;
             start(c, new Warp(c, p), "serum_w_floors");
             return;
         }
-        if (c.hp() <= 0.25f && c.cd[CD_TRI] == 0) {
+        if (c.hp() <= (c.rebuilt() ? 0.35f : 0.25f) && c.cd[CD_TRI] == 0) {
             c.cd[CD_TRI] = 400;
             start(c, new Tri(c, p), "tri_serum");
             return;
         }
         if (c.cooldown > 0) {
             c.cooldown--;
-            approach(c, p, dist);
+            approach(c, t, dist);
             return;
         }
         if (c.hp() < 0.7f && c.cd[CD_K] == 0 && c.getRandom().nextFloat() < 0.4f) {
@@ -148,17 +153,17 @@ public final class ClawMoves {
             start(c, new SerumK(c), "serum_k");
         } else if (c.cd[CD_R] == 0 && dist > 5 && dist < 26 && c.getRandom().nextFloat() < 0.5f) {
             c.cd[CD_R] = 260;
-            start(c, new SerumR(c, p), "serum_r");
+            start(c, new SerumR(c, t), "serum_r");
         } else if (c.cd[CD_W] == 0 && c.getRandom().nextFloat() < 0.4f) {
             c.cd[CD_W] = 320;
             start(c, new SerumW(c, p), "serum_w");
         } else if (dist > 4.5 || c.cd[CD_THRUST] == 0 && c.getRandom().nextFloat() < 0.35f) {
             c.cd[CD_THRUST] = 60;
-            start(c, new Extirpation(c, p), "extirpation");
+            start(c, new Extirpation(c, t), "extirpation");
         } else if (dist < 4.5) {
-            start(c, new Trail(c, p), "trail");
+            start(c, new Trail(c, t), "trail");
         } else {
-            approach(c, p, dist);
+            approach(c, t, dist);
             return;
         }
         c.cooldown = 14 + c.getRandom().nextInt(14);
@@ -359,6 +364,9 @@ public final class ClawMoves {
             for (TamableAnimal pet : c.level().getEntitiesOfClass(TamableAnimal.class, t.getBoundingBox().inflate(16), pet -> t instanceof Player pl && pet.isOwnedBy(pl) && pet.isAlive())) {
                 if (marked.size() < 5) marked.add(pet);
             }
+            // and Vergilius, in the rematch
+            Vergilius ally = c.allyEntity();
+            if (ally != null && !marked.contains(ally)) marked.add(ally);
         }
 
         @Override

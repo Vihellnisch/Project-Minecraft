@@ -36,7 +36,7 @@ public final class GloveServer {
     /** Ticks between attacks, per weapon. */
     public static final int[] COOLDOWN = {6, 16, 24, 20, 5, 8, 18, 18, 36, 10, 26, 22};
     public static final int ALL = (1 << WEAPONS) - 1;
-    static final int FORGET = 600, DRAW_EVERY = 3;
+    static final int FORGET = 600;
     static final double FURIOSO_RANGE = 16;
     private static final Vec3 UP = new Vec3(0, 1, 0);
 
@@ -51,6 +51,13 @@ public final class GloveServer {
 
     static State state(ServerPlayer p) {
         return STATES.computeIfAbsent(p.getUUID(), k -> new State());
+    }
+
+    /** /projectminecraft cooldowns: every weapon ready again. */
+    public static void resetCooldowns(ServerPlayer p) {
+        State s = state(p);
+        java.util.Arrays.fill(s.ready, 0);
+        sync(p, s, false);
     }
 
     // =================================================================== mastery
@@ -196,7 +203,7 @@ public final class GloveServer {
         for (Map.Entry<LivingEntity, Float> en : hits.entrySet()) {
             LivingEntity e = en.getKey();
             e.invulnerableTime = 0;
-            if (!e.hurt(p.damageSources().playerAttack(p), en.getValue())) continue;
+            if (!e.hurt(p.damageSources().playerAttack(p), en.getValue() * com.slop.projectminecraft.Config.GLOVE_DAMAGE.get().floatValue())) continue;
             landed.add(e);
             Vec3 push = WeaponMath.flat(e.position().subtract(p.position()));
             switch (w) {
@@ -265,25 +272,40 @@ public final class GloveServer {
     // =================================================================== Furioso progress
 
     static void track(ServerPlayer p, State s, int w, List<LivingEntity> landed) {
+        long now = p.level().getGameTime();
         LivingEntity t = null;
         for (LivingEntity e : landed) if (e.getId() == s.target) t = e;
+        boolean counts = true;
         if (t == null) {
+            LivingEntity other = null;
             for (LivingEntity e : landed) {
                 if (ArsenalEvents.validTarget(e)) {
-                    t = e;
+                    other = e;
                     break;
                 }
             }
-            if (t == null) return;
-            forget(s);
-            s.target = t.getId();
+            if (other == null) return;
+            boolean keep = com.slop.projectminecraft.Config.FURIOSO_KEEP_PROGRESS.get();
+            Entity cur = s.target < 0 ? null : p.serverLevel().getEntity(s.target);
+            boolean curAlive = cur instanceof LivingEntity le && le.isAlive();
+            long grace = com.slop.projectminecraft.Config.FURIOSO_SWITCH_GRACE.get() * 20L;
+            if (!keep && curAlive && now - s.last < grace) {
+                // a different enemy while the current one is still fresh: it stays the target, this hit doesn't count for it
+                counts = false;
+            } else {
+                // the new target: from scratch, unless the count is kept across enemies
+                if (!keep) forget(s);
+                s.target = other.getId();
+            }
         }
-        s.mask |= 1 << w;
-        s.last = p.level().getGameTime();
+        if (counts) {
+            s.mask |= 1 << w;
+            s.last = now;
+        }
         boolean drawn = false;
         // not mastered: always Random mode
         if (!mastered(p)) s.random = true;
-        if (s.random && ++s.hits % DRAW_EVERY == 0) {
+        if (s.random && ++s.hits % com.slop.projectminecraft.Config.RANDOM_SWAP_HITS.get() == 0) {
             s.sel = draw(p, s);
             drawn = true;
         }
@@ -308,8 +330,14 @@ public final class GloveServer {
         State s = STATES.get(p.getUUID());
         if (s == null || s.target < 0) return;
         Entity e = p.serverLevel().getEntity(s.target);
-        if (p.level().getGameTime() - s.last > FORGET || !(e instanceof LivingEntity le) || !le.isAlive()) {
+        boolean gone = !(e instanceof LivingEntity le) || !le.isAlive();
+        if (p.level().getGameTime() - s.last > FORGET) {
             forget(s);
+            sync(p, s, false);
+        } else if (gone) {
+            // the target died (or went): its count goes with it, unless the count is kept across enemies
+            if (com.slop.projectminecraft.Config.FURIOSO_KEEP_PROGRESS.get()) s.target = -1;
+            else forget(s);
             sync(p, s, false);
         }
     }

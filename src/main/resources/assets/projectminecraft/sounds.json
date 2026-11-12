@@ -197,5 +197,53 @@
     "sounds": [
       "projectminecraft:claw/shatter"
     ]
+  },
+  "vergilius.slash": {
+    "subtitle": "subtitles.projectminecraft.vergilius.slash",
+    "sounds": [
+      "projectminecraft:vergilius/slash"
+    ]
+  },
+  "vergilius.sizzle": {
+    "subtitle": "subtitles.projectminecraft.vergilius.sizzle",
+    "sounds": [
+      "projectminecraft:vergilius/sizzle"
+    ]
+  },
+  "vergilius.spike": {
+    "subtitle": "subtitles.projectminecraft.vergilius.spike",
+    "sounds": [
+      "projectminecraft:vergilius/spike"
+    ]
+  },
+  "vergilius.lake": {
+    "subtitle": "subtitles.projectminecraft.vergilius.lake",
+    "sounds": [
+      "projectminecraft:vergilius/lake"
+    ]
+  },
+  "vergilius.barrier": {
+    "subtitle": "subtitles.projectminecraft.vergilius.barrier",
+    "sounds": [
+      "projectminecraft:vergilius/barrier"
+    ]
+  },
+  "vergilius.bus_horn": {
+    "subtitle": "subtitles.projectminecraft.vergilius.bus_horn",
+    "sounds": [
+      "projectminecraft:vergilius/bus_horn"
+    ]
+  },
+  "vergilius.bus_engine": {
+    "subtitle": "subtitles.projectminecraft.vergilius.bus_engine",
+    "sounds": [
+      "projectminecraft:vergilius/bus_engine"
+    ]
+  },
+  "claw.roar": {
+    "subtitle": "subtitles.projectminecraft.claw.roar",
+    "sounds": [
+      "projectminecraft:claw/roar"
+    ]
   }
 }

@@ -112,7 +112,7 @@ public final class ArsenalEvents {
                 if (h.time() >= FuriosoScript.KILL) {
                     GUARD.remove(victim);
                     Stasis.release(victim);
-                    hurt(victim, ModDamageTypes.source(level, ModDamageTypes.ULTIMATE, p, p), h.damage());
+                    hurt(victim, ModDamageTypes.source(level, ModDamageTypes.ULTIMATE, p, p), h.damage() * com.slop.projectminecraft.Config.GLOVE_DAMAGE.get().floatValue());
                     // whatever survives Furioso bleeds and is bound, as the page says
                     if (victim.isAlive()) {
                         victim.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.WITHER, 200, 2));
@@ -120,7 +120,7 @@ public final class ArsenalEvents {
                     }
                     continue;
                 }
-                hurt(victim, p == null ? level.damageSources().generic() : level.damageSources().playerAttack(p), h.damage());
+                hurt(victim, p == null ? level.damageSources().generic() : level.damageSources().playerAttack(p), h.damage() * com.slop.projectminecraft.Config.GLOVE_DAMAGE.get().floatValue());
                 victim.setDeltaMovement(Vec3.ZERO);
             }
             lastS = now;

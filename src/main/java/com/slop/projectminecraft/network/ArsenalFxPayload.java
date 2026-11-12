@@ -20,6 +20,8 @@ public record ArsenalFxPayload(byte kind, double ax, double ay, double az, doubl
     public static final byte ROLAND = 36;         // a, b, ints = [RolandMoves.FX_*, ...]
     // ---- the Claw
     public static final byte CLAW = 37;           // a, b, ints = [ClawMoves.FX_* or ClawWarp.FX_WARP_*, entity, ...]
+    // ---- Vergilius
+    public static final byte VERGILIUS = 38;      // a, b, ints = [VergiliusMoves.FX_*, him, ...] (and GladiusServer's, from FX_HAND)
 
     public static final Type<ArsenalFxPayload> TYPE = new Type<>(ProjectMinecraft.id("arsenal_fx"));
     public static final StreamCodec<FriendlyByteBuf, ArsenalFxPayload> CODEC = StreamCodec.of(

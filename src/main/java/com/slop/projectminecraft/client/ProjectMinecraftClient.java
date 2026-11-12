@@ -49,6 +49,8 @@ public class ProjectMinecraftClient {
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.boss.ClawWarpClient.class);
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.boss.ClawHands.class);
         NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.boss.ClawEntrance.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.boss.VergiliusClient.class);
+        NeoForge.EVENT_BUS.register(com.slop.projectminecraft.client.boss.GladiusClient.class);
     }
 
     /** The Black Silence's gloves (and Furioso's weapons), and the Handmade Claw, on every player model. */
@@ -57,6 +59,7 @@ public class ProjectMinecraftClient {
             if (event.getSkin(skin) instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer pr) {
                 pr.addLayer(new GloveLayer(pr, event.getEntityModels().bakeLayer(GloveLayer.LAYER)));
                 pr.addLayer(new com.slop.projectminecraft.client.boss.ClawHands.Layer(pr));
+                pr.addLayer(new com.slop.projectminecraft.client.boss.GladiusClient.Layer(pr, event.getEntityModels().bakeLayer(com.slop.projectminecraft.client.boss.VergiliusRenderer.EXTRAS_LAYER)));
             }
         }
     }
@@ -76,12 +79,16 @@ public class ProjectMinecraftClient {
         event.registerLayerDefinition(RolandKinRenderer.HAIR_LAYER, RolandKinRenderer::createHair);
         event.registerLayerDefinition(com.slop.projectminecraft.client.boss.ClawHands.LAYER, com.slop.projectminecraft.client.boss.ClawHands::create);
         event.registerLayerDefinition(com.slop.projectminecraft.client.boss.ClawRenderer.EXTRAS_LAYER, com.slop.projectminecraft.client.boss.ClawRenderer::createExtras);
+        event.registerLayerDefinition(com.slop.projectminecraft.client.boss.VergiliusRenderer.EXTRAS_LAYER, com.slop.projectminecraft.client.boss.VergiliusRenderer::createExtras);
+        event.registerLayerDefinition(com.slop.projectminecraft.client.boss.LimbusBusRenderer.LAYER, com.slop.projectminecraft.client.boss.LimbusBusRenderer::create);
     }
 
     private static void onRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.ROLAND.get(), RolandRenderer::new);
         event.registerEntityRenderer(ModEntities.ROLAND_KIN.get(), RolandKinRenderer::new);
         event.registerEntityRenderer(ModEntities.CLAW.get(), com.slop.projectminecraft.client.boss.ClawRenderer::new);
+        event.registerEntityRenderer(ModEntities.VERGILIUS.get(), com.slop.projectminecraft.client.boss.VergiliusRenderer::new);
+        event.registerEntityRenderer(ModEntities.LIMBUS_BUS.get(), com.slop.projectminecraft.client.boss.LimbusBusRenderer::new);
     }
 
     private static void onReloadListeners(RegisterClientReloadListenersEvent event) {
@@ -100,6 +107,8 @@ public class ProjectMinecraftClient {
         event.registerAbove(VanillaGuiLayers.CROSSHAIR, ProjectMinecraft.id("boss_subtitles"), BossClient::renderSubtitle);
         event.registerAbove(VanillaGuiLayers.CROSSHAIR, ProjectMinecraft.id("claw_hud"), (g, t) -> com.slop.projectminecraft.client.boss.ClawClient.renderHud(g, t.getGameTimeDeltaPartialTick(true)));
         event.registerAboveAll(ProjectMinecraft.id("claw_warp"), com.slop.projectminecraft.client.boss.ClawWarpClient::render);
+        event.registerAbove(VanillaGuiLayers.CROSSHAIR, ProjectMinecraft.id("vergilius_hud"), com.slop.projectminecraft.client.boss.VergiliusClient::renderHud);
+        event.registerAbove(VanillaGuiLayers.CROSSHAIR, ProjectMinecraft.id("gladius_hud"), com.slop.projectminecraft.client.boss.GladiusClient::renderHud);
     }
 
     /** Cutscene letterbox, name cards and screen flashes. */

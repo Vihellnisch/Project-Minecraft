@@ -117,7 +117,8 @@ public final class GloveClient {
         // tap: the next weapon in Roland's order; hold: the wheel (opening a screen releases every key, so this resets)
         boolean usable = mc.screen == null && mc.player != null && Gloves.worn(mc.player) && !FuriosoClient.active(mc.player.getId())
                 && !holdingSlopStaff(mc.player)
-                && !com.slop.projectminecraft.client.boss.ClawClient.holdingClaw(mc.player);
+                && !com.slop.projectminecraft.client.boss.ClawClient.holdingClaw(mc.player)
+                && !com.slop.projectminecraft.client.boss.GladiusClient.holding(mc.player);
         if (usable && WHEEL_KEY.isDown()) {
             if (++wheelHeld == HOLD_TICKS) mc.setScreen(new GloveWheel());
         } else {

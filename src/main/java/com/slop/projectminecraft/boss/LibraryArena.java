@@ -116,6 +116,11 @@ public final class LibraryArena {
             build(library, slot);
             slots.setDirty();
         }
+        // receptions built before the floors had their extra lights get them now
+        if (slots.lit.add(slot)) {
+            lights(library, slot);
+            slots.setDirty();
+        }
         ensureRoland(library, slot);
         Vec3 at = arrival(slot);
         p.teleportTo(library, at.x, at.y, at.z, 180, 0);
@@ -311,6 +316,8 @@ public final class LibraryArena {
     static final class Slots extends SavedData {
         final Map<UUID, Integer> slots = new HashMap<>();
         final Set<Integer> built = new HashSet<>();
+        /** Receptions that have the extra floor lights (added later; older ones get them on the next visit). */
+        final Set<Integer> lit = new HashSet<>();
         /** Receptions whose Roland is alive (loaded or not). */
         final Set<Integer> rolands = new HashSet<>();
         int next = 1;
@@ -335,6 +342,7 @@ public final class LibraryArena {
             CompoundTag m = tag.getCompound("Slots");
             for (String k : m.getAllKeys()) s.slots.put(UUID.fromString(k), m.getInt(k));
             for (int b : tag.getIntArray("Built")) s.built.add(b);
+            for (int b : tag.getIntArray("Lit")) s.lit.add(b);
             for (int b : tag.getIntArray("Rolands")) s.rolands.add(b);
             return s;
         }
@@ -346,6 +354,7 @@ public final class LibraryArena {
             slots.forEach((k, v) -> m.putInt(k.toString(), v));
             tag.put("Slots", m);
             tag.putIntArray("Built", built.stream().mapToInt(Integer::intValue).toArray());
+            tag.putIntArray("Lit", lit.stream().mapToInt(Integer::intValue).toArray());
             tag.putIntArray("Rolands", rolands.stream().mapToInt(Integer::intValue).toArray());
             return tag;
         }
@@ -359,6 +368,44 @@ public final class LibraryArena {
             for (int cx = -2; cx <= 2; cx++) for (int cz = -2; cz <= 2; cz++) level.getChunk((at.getX() >> 4) + cx, (at.getZ() >> 4) + cz);
         buildLibrary(level, c);
         buildFactory(level, f);
+    }
+
+    /**
+     * Light for the middle of both floors (shader packs and low brightness left it dark): warm froglights set into the
+     * library floor's inlaid ring and lit red lamps where the factory's rust seams cross, flush with the floor, and
+     * invisible light blocks hung above the fight. Nothing to trip over; only air is ever replaced by the invisible ones.
+     */
+    static void lights(ServerLevel level, int slot) {
+        BlockPos c = center(slot), f = factory(slot);
+        for (BlockPos at : new BlockPos[]{c, f})
+            for (int cx = -2; cx <= 2; cx++) for (int cz = -2; cz <= 2; cz++) level.getChunk((at.getX() >> 4) + cx, (at.getZ() >> 4) + cz);
+        // the library: a froglight every few blocks round the inlaid ring (the polished brick band at 12 out)
+        for (int i = 0; i < 16; i++) {
+            float a = i * Mth.TWO_PI / 16;
+            int dx = Math.round(Mth.cos(a) * 12), dz = Math.round(Mth.sin(a) * 12);
+            // not under the steps up to the desk
+            if (dz <= -12 && Math.abs(dx) <= 5) continue;
+            set(level, c, dx, FLOOR, dz, Blocks.OCHRE_FROGLIGHT.defaultBlockState());
+        }
+        // and a few round the gilded centre
+        for (int[] o : new int[][]{{3, 0}, {-3, 0}, {0, 3}, {0, -3}}) set(level, c, o[0], FLOOR, o[1], Blocks.OCHRE_FROGLIGHT.defaultBlockState());
+        hiddenLights(level, c, FLOOR + 6, 15);
+        // the factory: lit red lamps where the seams cross, inside the floor
+        for (int dx = -18; dx <= 18; dx += 6) for (int dz = -12; dz <= 18; dz += 6) {
+            if (dist(dx, dz) > RADIUS - 2) continue;
+            set(level, f, dx, FLOOR, dz, Blocks.REDSTONE_LAMP.defaultBlockState().setValue(RedstoneLampBlock.LIT, true));
+        }
+        hiddenLights(level, f, FLOOR + 7, 12);
+    }
+
+    /** Invisible light blocks (no collision, no outline) on a grid over the floor, only into air. */
+    private static void hiddenLights(ServerLevel level, BlockPos c, int y, int strength) {
+        BlockState light = Blocks.LIGHT.defaultBlockState().setValue(net.minecraft.world.level.block.LightBlock.LEVEL, strength);
+        for (int dx = -14; dx <= 14; dx += 7) for (int dz = -14; dz <= 14; dz += 7) {
+            if (dist(dx, dz) > RADIUS - 3) continue;
+            BlockPos at = new BlockPos(c.getX() + dx, y, c.getZ() + dz);
+            if (level.getBlockState(at).isAir()) level.setBlock(at, light, 2);
+        }
     }
 
     private static void set(ServerLevel level, BlockPos c, int dx, int y, int dz, BlockState s) {

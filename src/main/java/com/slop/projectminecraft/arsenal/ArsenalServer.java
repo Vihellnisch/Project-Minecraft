@@ -23,6 +23,15 @@ public final class ArsenalServer {
             case ArsenalActionPayload.CLAW_SELECT -> {
                 if (a.ints().length > 0) ClawServer.select(p, a.ints()[0]);
             }
+            case ArsenalActionPayload.GLADIUS_SELECT -> {
+                if (a.ints().length > 0) GladiusServer.select(p, a.ints()[0]);
+            }
+            case ArsenalActionPayload.EYE_SLOT -> EyeSlot.click(p);
+            case ArsenalActionPayload.EYE_LOOK -> EyeSlot.look(p, a.ints());
+            case ArsenalActionPayload.VERG_CHOICE -> {
+                if (a.ints().length > 1 && p.level().getEntity(a.ints()[0]) instanceof com.slop.projectminecraft.boss.Vergilius v && v.distanceTo(p) < 32)
+                    v.choose(p, a.ints()[1] == 1);
+            }
             default -> {}
         }
     }
