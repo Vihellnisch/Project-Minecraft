@@ -129,6 +129,11 @@ public final class ClawClient {
                 CameraShake.addAt(dist, 0.3f, 20);
             }
             case FX_R_LINE -> LINES.add(new Line(a, b, clock, 22, 1.0f, 0.55f, 0.12f));
+            case FX_TRI_LINE -> {
+                // where the next Tri-serum dash goes: off it, and it misses
+                float[] c = SERUM_RGB[(p.i(2) + 1) % 3];
+                LINES.add(new Line(a, b, clock, Math.max(4, p.i(3)), c[0], c[1], c[2]));
+            }
             case FX_R_CHARGE -> {
                 ArcFx.addBeam(a, b, 10, 0.55f, 1.0f, 0.45f, 0.12f, false);
                 ArcFx.addBeam(a, b, 6, 0.18f, 1.0f, 0.9f, 0.7f, false);
@@ -141,6 +146,28 @@ public final class ClawClient {
                 if (dist < 30) ImpactFrame.trigger(ImpactFrame.RED, 110);
             }
             case FX_MARK -> MARKS.add(new Mark(p.i(2), clock, p.i(3)));
+            case FX_RUSH_FLASH -> {
+                // the rush's line flashes white just before he lunges
+                LINES.add(new Line(a, b, clock, 6, 1.0f, 1.0f, 1.0f));
+                for (int i = 0; i < 16; i++) {
+                    Vec3 q = a.lerp(b, R.nextDouble());
+                    level.addParticle(ParticleTypes.ELECTRIC_SPARK, q.x, q.y + 0.1, q.z, 0, 0.05, 0);
+                }
+                if (mc.player != null && p.i(2) == mc.player.getId()) ScreenFlash.flash(0.2f);
+            }
+            case FX_MARK_LOCK -> {
+                // the mark drops to the ground where they stand: a circle, and a ring closing in on it until the cut
+                MARKS.removeIf(m -> m.entity == p.i(2));
+                Vec3 g = p.a().add(0, 0.06, 0);
+                int life = Math.max(6, p.i(3));
+                com.slop.projectminecraft.client.render.RingFx.add(g, new Vec3(0, 1, 0), 1.45f, 1.4f, life, 0.4f, 0.65f, 1.0f, 0.9f);
+                com.slop.projectminecraft.client.render.RingFx.add(g, new Vec3(0, 1, 0), 3.2f, 0.3f, life, 0.55f, 0.75f, 1.0f, 0.7f);
+                RingFx.flash(g.add(0, 0.2, 0), 1.6f, 6, 0.4f, 0.65f, 1.0f, 0.8f);
+                if (mc.player != null && p.i(2) == mc.player.getId()) {
+                    ScreenFlash.flash(0.15f);
+                    mc.player.playSound(net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME, 1.5f, 0.6f);
+                }
+            }
             case FX_MARK_HIT -> {
                 RingFx.flash(a, 1.2f, 5, 0.4f, 0.65f, 1.0f, 1.0f);
                 ArcFx.addColoredSlash(a, Vec3.directionFromRotation(0, R.nextFloat() * 360), R.nextFloat() * 3, 0.5f, 0.7f, 1.0f);

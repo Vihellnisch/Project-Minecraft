@@ -60,7 +60,7 @@ public class Vergilius extends Monster {
     /** Subtitle lines (lang projectminecraft.boss.vergilius.line.N); Roland.BANNER is his name card. */
     public static final int LINE_INTRO = 0, LINE_DRAW = 1, LINE_WARN = 2, LINE_RETREAT = 3, LINE_RESET = 4, LINE_BETRAY = 5, LINE_JOIN = 6,
             LINE_ALREADY = 7, LINE_WITHDRAW = 8, LINE_MANIFEST = 9, LINE_BARK = 10, BARKS = 4, LINE_FUNERAL = 14, LINE_DOWNED = 15,
-            LINE_STAY = 16, LINE_FOLLOW = 17, LINE_WARNING = 18, SPEAKER = 3;
+            LINE_STAY = 16, LINE_FOLLOW = 17, LINE_WARNING = 18, LINE_ALLY_EGO = 19, SPEAKER = 3;
     /** The bus coming for him: when it's called, pulls up, opens, he gets on, it shuts, drives off, is gone (ticks of RETREAT/WITHDRAW). */
     static final int B_CALL = 20, B_STOP = 80, B_OPEN = 86, B_STAND = 92, B_LINE = 96, B_WALK = 104, B_IN = 122, B_SHUT = 128, B_GO = 140,
             B_FADE = 186, B_GONE = 206;
@@ -79,6 +79,11 @@ public class Vergilius extends Monster {
     int stateT;
     boolean introduced, choosing, staying;
     int choiceT, lostTicks, downed, nextBark = 2400;
+    /** The rematch: how much stronger than the default the rebuilt Claw is (his health), and so how much stronger he fights; 0 = not worked out yet. */
+    float allyScale;
+    /** The rematch: ticks the Claw has left burning from his blade (the Claw doesn't burn otherwise), and the E.G.O / Funeral used. */
+    int clawBurn;
+    boolean allyFuneral;
     /** The owner's hits on him, by tick (three close together is a betrayal). */
     final List<Integer> ownerHits = new ArrayList<>();
 
@@ -221,7 +226,7 @@ public class Vergilius extends Monster {
     float dmg() {
         float k = Config.VERGILIUS_DAMAGE.get().floatValue();
         return switch (state()) {
-            case ALLY -> k * 0.6f;
+            case ALLY -> k * Math.max(1, allyScale) * Config.ALLY_DAMAGE.get().floatValue();
             case COMPANION -> k * 0.5f;
             default -> k;
         };
@@ -451,11 +456,27 @@ public class Vergilius extends Monster {
             onRematchLost();
             return;
         }
-        if (tickDowned()) return;
+        if (c.state() == Claw.FIGHT && allyScale == 0) {
+            // his health and damage keep up with the Claw's (raised by the config or by other mods)
+            double stock = Config.CLAW_HEALTH.getDefault() * Config.REBUILT_CLAW_HEALTH.getDefault();
+            allyScale = (float) Mth.clamp(c.getMaxHealth() / stock, 1, 50);
+            getAttribute(Attributes.MAX_HEALTH).setBaseValue(Config.VERGILIUS_HEALTH.get() * allyScale);
+            setHealth(getMaxHealth());
+            note("ally scale " + allyScale);
+        }
         if (c.state() != Claw.FIGHT) {
             getNavigation().stop();
             if (c.state() == Claw.ARRIVE) getLookControl().setLookAt(c, 30, 30);
             return;
+        }
+        // the burns his blade left: the Claw doesn't catch fire, but these do burn
+        if (clawBurn > 0) {
+            clawBurn--;
+            if (clawBurn % 10 == 0) {
+                c.invulnerableTime = 0;
+                c.hurt(damageSources().indirectMagic(this, this), 2.0f * Math.max(1, allyScale) * Config.ALLY_DAMAGE.get().floatValue());
+            }
+            if (clawBurn % 2 == 0) level.sendParticles(net.minecraft.core.particles.ParticleTypes.FLAME, c.getX(), c.getY() + 1, c.getZ(), 3, 0.3, 0.6, 0.3, 0.01);
         }
         VergiliusMoves.tick(this, level, c);
     }
@@ -467,6 +488,14 @@ public class Vergilius extends Monster {
         VergiliusMoves.drop(this);
         setState(COMPANION);
         owner = quarry;
+        if (ego()) {
+            setEgo(false);
+            lake = null;
+            fx(position(), Vec3.ZERO, VergiliusMoves.FX_LAKE_OFF, getId());
+        }
+        // back to his own health (the rematch scaled it to the Claw's)
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(Config.VERGILIUS_HEALTH.get());
+        allyScale = 0;
         setHealth(getMaxHealth());
         downed = 0;
         setBodyPose(POSE_STAND);
@@ -808,6 +837,17 @@ public class Vergilius extends Monster {
                 // your side: players don't hurt him
                 if (by instanceof Player) return false;
                 boolean hit = super.hurt(source, amount);
+                // the rematch: he falls, and it's lost (the Claw takes his leave, he's driven off)
+                if (state() == ALLY && getHealth() <= getMaxHealth() * 0.1f) {
+                    VergiliusMoves.drop(this);
+                    setHealth(Math.max(1, getHealth()));
+                    say(LINE_DOWNED);
+                    fx(position().add(0, 1, 0), Vec3.ZERO, VergiliusMoves.FX_DOWNED, getId());
+                    Claw c = claw == null ? null : ((ServerLevel) level()).getEntity(claw) instanceof Claw found ? found : null;
+                    if (c != null && c.state() == Claw.FIGHT) c.leave((ServerLevel) level(), true);
+                    else onRematchLost();
+                    return hit;
+                }
                 if (getHealth() <= getMaxHealth() * (state() == ALLY ? 0.2f : 0.1f)) {
                     VergiliusMoves.drop(this);
                     downed = state() == ALLY ? 160 : 600;

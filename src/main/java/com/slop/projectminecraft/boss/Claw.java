@@ -93,6 +93,8 @@ public class Claw extends Monster {
     int cooldown = 20;
     final int[] cd = new int[8];
     boolean noSellUsed, warpedOnce;
+    /** Tri-serum Cocktails used this fight. */
+    int triUsed;
     /** Damage taken since a stagger window opened (Serum K, Serum W marks), or -1 when none is open. */
     float staggerTaken = -1;
     int groggy;

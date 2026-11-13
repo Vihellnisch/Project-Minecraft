@@ -283,5 +283,11 @@
   "projectminecraft.configuration.hitStop": "Hit Stop",
   "projectminecraft.configuration.impactFrames": "Impact Frames",
   "projectminecraft.configuration.cinematics": "Cinematic Cameras",
-  "projectminecraft.configuration.title": "Project Minecraft Configuration"
+  "projectminecraft.configuration.title": "Project Minecraft Configuration",
+  "projectminecraft.configuration.warpStillDamage": "Serum W: Damage If Kept Still",
+  "projectminecraft.configuration.triUses": "Tri-serum Uses per Fight",
+  "projectminecraft.configuration.triHeal": "Tri-serum Heal per Dash",
+  "projectminecraft.configuration.rebuiltClawAggro": "Rematch: Claw Aggro on Vergilius",
+  "projectminecraft.configuration.allyDamage": "Rematch: Vergilius Damage",
+  "projectminecraft.boss.vergilius.line.19": "He's faltering. Give it everything you've got."
 }

@@ -81,6 +81,10 @@ public final class VergiliusTour {
         STOPS.add(new Stop("eye_look", 140));
         STOPS.add(new Stop("idle", 60));
         STOPS.add(new Stop("shaders", 200));
+        STOPS.add(new Stop("rematch", 1040));
+        STOPS.add(new Stop("rematch_w", 760));
+        STOPS.add(new Stop("verg_kills_claw", 360));
+        STOPS.add(new Stop("rush", 420));
         String only = System.getProperty("projectminecraft.tour.only", "");
         if (!only.isEmpty()) STOPS.removeIf(st -> Arrays.stream(only.split(",")).noneMatch(st.name::equals));
     }
@@ -654,6 +658,202 @@ public final class VergiliusTour {
                     for (Entity e : p.serverLevel().getEntitiesOfClass(Entity.class, p.getBoundingBox().inflate(16), e -> !(e instanceof net.minecraft.world.entity.player.Player))) e.discard();
                     p.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD, ItemStack.EMPTY);
                 });
+            }
+            case "rematch" -> {
+                // 1.2.1: Tri-serum twice at most, its dashes dodgeable, the trip softer if you keep still, Vergilius scaled,
+                // and the rematch lost when he falls
+                int T1 = 80, T2 = 360, LOSS = 960;
+                if (w == 2) onServer(server, p -> {
+                    survival(p);
+                    p.removeAllEffects();
+                    p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(100);
+                    p.setHealth(100);
+                    p.teleportTo(p.serverLevel(), 40.5, p.serverLevel().getHeight(Heightmap.Types.MOTION_BLOCKING, 40, 40), 40.5, 0, 0);
+                    UUID id = UUID.randomUUID();
+                    ItemStack stack = new ItemStack(ModItems.HITLIST.get());
+                    Hitlist.edit(stack, t -> {
+                        t.putUUID("Id", id);
+                        t.putInt("Stage", Hitlist.MET);
+                    });
+                    p.getInventory().add(stack);
+                    list = Hitlist.find(p, id);
+                    verg = Vergilius.atScene(p.serverLevel(), p.position().add(0, 0, 5), 180, id, p.getUUID());
+                });
+                if (w == 20) onServer(server, p -> {
+                    verg.introducedForTour();
+                    verg.choose(p, false);
+                    claw = nearest(p, Claw.class);
+                    claw.skipEntrance();
+                    log("rematch: claw max hp " + claw.getMaxHealth());
+                });
+                if (w == 40) onServer(server, p -> log("rematch: verg hp " + verg.getHealth() + "/" + verg.getMaxHealth() + " (scaled to the claw) | log " + tail(verg.log)));
+                // a Tri on you, standing still: the dashes land; then the trip, kept still
+                if (w == T1) onServer(server, p -> {
+                    p.setHealth(100);
+                    claw.setHealth(claw.getMaxHealth() * 0.55f);
+                    log("rematch: forced tri " + com.slop.projectminecraft.boss.ClawMoves.force(claw, "tri_serum", 300) + " claw hp " + claw.getHealth());
+                });
+                if (w == T1 + 4) grab(mc, shot + "_tri_line");
+                if (w == T1 + 102) onServer(server, p -> {
+                    log("rematch: after standing in the dashes: player " + p.getHealth() + " claw " + claw.getHealth());
+                    p.setHealth(100);
+                });
+                if (w == T1 + 260) onServer(server, p -> log("rematch: after the trip kept still: player " + p.getHealth() + " (100 before; 35% of max would be 65)"));
+                // a Tri dodged: stepped off each line; then the trip, struggling
+                if (w == T2) onServer(server, p -> {
+                    p.setHealth(100);
+                    claw.setHealth(claw.getMaxHealth() * 0.55f);
+                    log("rematch: forced tri " + com.slop.projectminecraft.boss.ClawMoves.force(claw, "tri_serum", 300) + " claw hp " + claw.getHealth());
+                });
+                for (int k = 0; k < 5; k++) if (w == T2 + 35 + 13 * k) onServer(server, p -> {
+                    Vec3 side = new Vec3(p.getX() - claw.getX(), 0, p.getZ() - claw.getZ()).normalize();
+                    Vec3 off = new Vec3(-side.z, 0, side.x).scale(3.2);
+                    p.teleportTo(p.getX() + off.x, p.getY(), p.getZ() + off.z);
+                });
+                if (w == T2 + 102) onServer(server, p -> {
+                    log("rematch: after dodging the dashes: player " + p.getHealth());
+                    p.setHealth(100);
+                });
+                if (w == T2 + 150) onServer(server, com.slop.projectminecraft.warp.ClawWarp::struggle);
+                if (w == T2 + 270) onServer(server, p -> log("rematch: after the trip struggling: player " + p.getHealth() + " | claw log " + tail(claw.log)));
+                // low on health: no more than two Tri-serums from the brain (two forced already, so none)
+                if (w == T2 + 290) onServer(server, p -> {
+                    p.setHealth(100);
+                    claw.setHealth(claw.getMaxHealth() * 0.08f);
+                });
+                if (w == LOSS - 40) onServer(server, p -> log("rematch: low hp a while: tri count in log " + claw.log.stream().filter(n -> n.contains("tri_serum")).count() + " | " + tail(claw.log)));
+                // Vergilius falls: the rematch is lost
+                if (w == LOSS) onServer(server, p -> {
+                    verg.setHealth(verg.getMaxHealth() * 0.12f);
+                    verg.invulnerableTime = 0;
+                    verg.hurt(claw.damageSources().mobAttack(claw), verg.getMaxHealth() * 0.05f);
+                    log("rematch: vergilius fell -> verg state " + verg.state() + " (5 = withdraw) | claw state " + claw.state() + " | hitlist stage " + Hitlist.stage(list));
+                });
+                if (w == LOSS + 20) grab(mc, shot + "_lost");
+            }
+            case "rematch_w" -> {
+                // 1.2.1: Serum W's marks lock to the ground (out of the circle, it misses); Vergilius's harder blows, burns,
+                // his E.G.O at the Claw's half and Funeral at a fifth
+                if (w == 2) onServer(server, p -> {
+                    survival(p);
+                    p.removeAllEffects();
+                    p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(100);
+                    p.setHealth(100);
+                    p.teleportTo(p.serverLevel(), 80.5, p.serverLevel().getHeight(Heightmap.Types.MOTION_BLOCKING, 80, 80), 80.5, 0, 0);
+                    UUID id = UUID.randomUUID();
+                    ItemStack stack = new ItemStack(ModItems.HITLIST.get());
+                    Hitlist.edit(stack, t -> {
+                        t.putUUID("Id", id);
+                        t.putInt("Stage", Hitlist.MET);
+                    });
+                    p.getInventory().add(stack);
+                    list = Hitlist.find(p, id);
+                    verg = Vergilius.atScene(p.serverLevel(), p.position().add(0, 0, 5), 180, id, p.getUUID());
+                });
+                if (w == 20) onServer(server, p -> {
+                    verg.introducedForTour();
+                    verg.choose(p, false);
+                    claw = nearest(p, Claw.class);
+                    claw.skipEntrance();
+                });
+                // W, standing in the circle
+                if (w == 60) onServer(server, p -> {
+                    p.setHealth(100);
+                    log("rematch_w: forced w " + com.slop.projectminecraft.boss.ClawMoves.force(claw, "serum_w", 200));
+                });
+                if (w == 60 + 50) grab(mc, shot + "_locked");
+                if (w == 60 + 90) onServer(server, p -> log("rematch_w: stood in the circle: player " + p.getHealth()));
+                // W, stepping out once it locks
+                if (w == 170) onServer(server, p -> {
+                    p.setHealth(100);
+                    com.slop.projectminecraft.boss.ClawMoves.force(claw, "serum_w", 200);
+                });
+                if (w == 170 + 50) onServer(server, p -> p.teleportTo(p.getX() + 3, p.getY(), p.getZ()));
+                if (w == 170 + 90) onServer(server, p -> log("rematch_w: stepped out: player " + p.getHealth()));
+                // Vergilius on the Claw for a while
+                if (w == 270) onServer(server, p -> {
+                    p.setHealth(100);
+                    claw.setHealth(claw.getMaxHealth());
+                    p.teleportTo(p.getX() + 20, p.getY(), p.getZ());
+                });
+                if (w == 470) onServer(server, p -> log("rematch_w: 10 s of Vergilius: claw " + claw.getHealth() + "/" + claw.getMaxHealth() + " | verg log " + tail(verg.log)));
+                // under half: his E.G.O
+                if (w == 480) onServer(server, p -> claw.setHealth(claw.getMaxHealth() * 0.45f));
+                if (w == 560) {
+                    grab(mc, shot + "_ego");
+                    onServer(server, p -> log("rematch_w: claw under half: verg ego " + verg.ego() + " | " + tail(verg.log)));
+                }
+                // a fifth: Funeral
+                if (w == 580) onServer(server, p -> claw.setHealth(claw.getMaxHealth() * 0.18f));
+                if (w == 720) onServer(server, p -> log("rematch_w: claw at a fifth: " + tail(verg.log) + " | claw " + claw.getHealth() + " state " + claw.state()));
+            }
+            case "verg_kills_claw" -> {
+                // the crash from testing: Vergilius's own blow beats the rebuilt Claw (the move ends with him a companion)
+                if (w == 2) onServer(server, p -> {
+                    survival(p);
+                    p.teleportTo(p.serverLevel(), 120.5, p.serverLevel().getHeight(Heightmap.Types.MOTION_BLOCKING, 120, 120), 120.5, 0, 0);
+                    UUID id = UUID.randomUUID();
+                    ItemStack stack = new ItemStack(ModItems.HITLIST.get());
+                    Hitlist.edit(stack, t -> {
+                        t.putUUID("Id", id);
+                        t.putInt("Stage", Hitlist.MET);
+                    });
+                    p.getInventory().add(stack);
+                    list = Hitlist.find(p, id);
+                    verg = Vergilius.atScene(p.serverLevel(), p.position().add(0, 0, 5), 180, id, p.getUUID());
+                });
+                if (w == 20) onServer(server, p -> {
+                    verg.introducedForTour();
+                    verg.choose(p, false);
+                    claw = nearest(p, Claw.class);
+                    claw.skipEntrance();
+                    claw.setNoSellUsed(true);
+                    p.teleportTo(p.getX() + 25, p.getY(), p.getZ());
+                });
+                if (w == 30) onServer(server, p -> claw.setHealth(claw.getMaxHealth() * 0.6f));
+                if (w >= 40 && w < 318 && w % 5 == 0) onServer(server, p -> {
+                    if (claw.state() == Claw.FIGHT) claw.setHealth(Math.min(claw.getHealth(), 2));
+                });
+                if (w == 322) onServer(server, p -> {
+                    Vec3 f = verg.position().add(Vec3.directionFromRotation(0, verg.getYRot()).scale(3));
+                    claw.teleportTo(f.x, f.y, f.z);
+                    claw.setHealth(2);
+                    log("verg_kills_claw: forced puncture " + VergiliusMoves.force(verg, "heated_puncture", claw, 100) + " claw hp " + claw.getHealth());
+                });
+                if (w == 350) onServer(server, p -> log("verg_kills_claw: claw state " + claw.state() + " (2 = retreat) | verg state " + verg.state() + " (4 = companion) | " + tail(verg.log)));
+            }
+            case "rush" -> {
+                // 1.2.1: the rush (Serum W through every floor): kneel, a line, a flash, the lunge; on it you're dragged, off it he staggers
+                if (w == 2) onServer(server, p -> {
+                    survival(p);
+                    p.removeAllEffects();
+                    p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(100);
+                    p.setHealth(100);
+                    p.teleportTo(p.serverLevel(), 160.5, p.serverLevel().getHeight(Heightmap.Types.MOTION_BLOCKING, 160, 160), 160.5, 0, 0);
+                    p.getInventory().add(new ItemStack(ModItems.BLACK_SILENCE_BOOK.get()));
+                    claw = ModEntities.CLAW.get().create(p.serverLevel());
+                    claw.moveTo(p.getX(), p.getY(), p.getZ() + 6, 180, 0);
+                    claw.arrive(p);
+                    p.serverLevel().addFreshEntity(claw);
+                    claw.skipEntrance();
+                    claw.setNoSellUsed(true);
+                });
+                if (w == 30) onServer(server, p -> log("rush: forced, standing on the line " + com.slop.projectminecraft.boss.ClawMoves.force(claw, "serum_w_floors", 300)));
+                if (w == 30 + 14) grab(mc, shot + "_line");
+                if (w == 30 + 32) grab(mc, shot + "_flash");
+                if (w == 30 + 40) onServer(server, p -> log("rush: stood still -> in the trip " + com.slop.projectminecraft.warp.ClawWarp.busy(p)));
+                if (w == 260) onServer(server, p -> {
+                    p.setHealth(100);
+                    log("rush: forced again, stepping off " + com.slop.projectminecraft.boss.ClawMoves.force(claw, "serum_w_floors", 300));
+                });
+                if (w == 260 + 20) onServer(server, p -> {
+                    Vec3 side = new Vec3(p.getX() - claw.getX(), 0, p.getZ() - claw.getZ()).normalize();
+                    p.teleportTo(p.getX() - side.z * 3, p.getY(), p.getZ() + side.x * 3);
+                });
+                if (w == 260 + 44) {
+                    grab(mc, shot + "_missed");
+                    onServer(server, p -> log("rush: stepped off -> in the trip " + com.slop.projectminecraft.warp.ClawWarp.busy(p) + " | claw groggy " + claw.groggyTicks() + " hp " + p.getHealth() + " | " + tail(claw.log)));
+                }
             }
             case "idle" -> {
                 if (w == 2) onServer(server, p -> {

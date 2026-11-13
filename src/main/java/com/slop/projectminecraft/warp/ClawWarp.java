@@ -82,6 +82,8 @@ public final class ClawWarp {
         /** Where everyone in it is held. */
         final Map<UUID, Vec3> pins = new LinkedHashMap<>();
         @Nullable Entity mob;
+        /** A player victim moved, jumped or crouched while held (Keep perfectly still...): the full slash. */
+        boolean struggled;
         int t = -PREP;
         long lastPrep;
 
@@ -99,6 +101,12 @@ public final class ClawWarp {
     private static final Map<UUID, Run> RUNS = new HashMap<>();
     /** Everyone currently in a run (victims and riders), for the damage guard. */
     private static final Map<UUID, Run> INSIDE = new HashMap<>();
+
+    /** The victim's client says they moved while held. */
+    public static void struggle(ServerPlayer p) {
+        Run run = RUNS.get(p.getUUID());
+        if (run != null && run.mob == null && run.t >= 0) run.struggled = true;
+    }
 
     public static boolean busy(Entity e) {
         return INSIDE.containsKey(e.getUUID());
@@ -304,6 +312,8 @@ public final class ClawWarp {
     private static void hurt(MinecraftServer server, Run run, LivingEntity victim, float amount, boolean lethal) {
         if (amount <= 0) return;
         Entity attacker = run.attacker == null ? null : findAttacker(server, run.attacker);
+        // a player who kept perfectly still is torn apart a little less
+        if (run.mob == null && !run.struggled) amount *= Config.WARP_STILL_DAMAGE.get().floatValue();
         if (!lethal) amount = Math.min(amount, victim.getHealth() - 1);
         if (amount <= 0) return;
         victim.invulnerableTime = 0;

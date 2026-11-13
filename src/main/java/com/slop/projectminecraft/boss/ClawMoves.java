@@ -30,6 +30,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -57,7 +58,7 @@ public final class ClawMoves {
     /** ArsenalFxPayload.CLAW sub-kinds (ints[0]); ints[1] is the Claw's id. */
     public static final int FX_RIFT_OPEN = 1, FX_RIFT_CLOSE = 2, FX_BLINK = 3, FX_SWIPE = 4, FX_THRUST = 5, FX_R_LINE = 6, FX_R_CHARGE = 7,
             FX_MARK = 8, FX_MARK_HIT = 9, FX_K_ORB = 10, FX_K_HEAL = 11, FX_NEGATE = 12, FX_GROGGY = 13, FX_TRI = 14, FX_TRI_DASH = 15, FX_BREAK = 16,
-            FX_INJECT = 17,
+            FX_INJECT = 17, FX_TRI_LINE = 19, FX_MARK_LOCK = 20, FX_RUSH_FLASH = 21,
             /** His exit: [kind, claw, the player who beat him (their camera follows it)]. */
             FX_EXIT = 18;
     /** Cooldown slots (Claw.cd). */
@@ -120,16 +121,18 @@ public final class ClawMoves {
             c.staggerTaken = -1;
         }
         if (c.move != null) {
-            c.move.tick();
-            if (!c.move.done()) return;
+            // a move can be replaced mid-tick (the Tri-serum into the trip) or dropped (Vergilius falls, and he leaves)
+            Move m = c.move;
+            m.tick();
+            if (c.move != m || !m.done()) return;
             c.move = null;
             c.setBodyPose(Claw.POSE_STAND);
             c.setSerums(0);
             c.staggerTaken = -1;
         }
-        // the rematch: now and then he goes for Vergilius instead of you (unless he's down)
+        // the rematch: mostly he goes for Vergilius (if Vergilius falls, it's lost)
         Vergilius ally = c.allyEntity();
-        LivingEntity t = ally != null && !ally.isDowned() && c.getRandom().nextFloat() < 0.35f ? ally : p;
+        LivingEntity t = ally != null && !ally.isDowned() && c.getRandom().nextFloat() < com.slop.projectminecraft.Config.REBUILT_AGGRO.get() ? ally : p;
         c.getLookControl().setLookAt(t, 30, 30);
         double dist = c.distanceTo(t);
         // the big ones first: the trip through every floor at half health, the cocktail below a quarter
@@ -138,9 +141,9 @@ public final class ClawMoves {
             start(c, new Warp(c, p), "serum_w_floors");
             return;
         }
-        if (c.hp() <= (c.rebuilt() ? 0.35f : 0.25f) && c.cd[CD_TRI] == 0) {
-            c.cd[CD_TRI] = 400;
-            start(c, new Tri(c, p), "tri_serum");
+        if (c.triUsed < com.slop.projectminecraft.Config.TRI_USES.get() && c.hp() <= triAt(c, c.triUsed)) {
+            c.triUsed++;
+            start(c, new Tri(c, t, p), "tri_serum");
             return;
         }
         if (c.cooldown > 0) {
@@ -167,6 +170,12 @@ public final class ClawMoves {
             return;
         }
         c.cooldown = 14 + c.getRandom().nextInt(14);
+    }
+
+    /** The health share the `n`th Tri-serum (from 0) comes at: a quarter (rebuilt 35%), each after under half the one before. */
+    static float triAt(Claw c, int n) {
+        float first = c.rebuilt() ? 0.35f : 0.25f;
+        return (float) (first * Math.pow(0.43, n));
     }
 
     /** He doesn't walk far: a short walk, or a blink. */
@@ -355,7 +364,10 @@ public final class ClawMoves {
 
     // ---- Serum W: marks, then a blink-cut to each mark still in sight
     static final class SerumW extends Move {
+        /** The marks follow for a while, then lock onto the ground where each one stands (LOCK); the cuts land there. */
+        static final int LOCK = 46, FIRST_CUT = 60, RADIUS_SQ = 2;
         final List<LivingEntity> marked = new ArrayList<>();
+        final List<Vec3> spots = new ArrayList<>();
         int cut;
 
         SerumW(Claw c, LivingEntity t) {
@@ -380,24 +392,38 @@ public final class ClawMoves {
                 sound(c, ModSounds.CLAW_INJECT.get(), 1.5f, 1.2f);
                 for (LivingEntity e : marked) c.fx(e.position(), Vec3.ZERO, FX_MARK, c.getId(), e.getId(), 60);
             }
-            if (age == 60) {
-                c.staggerTaken = -1;
-                // a mark he can't see any more is lost
-                marked.removeIf(e -> !e.isAlive() || !c.hasLineOfSight(e) || e.distanceTo(c) > 32);
+            if (age == LOCK) {
+                // a mark he can't see any more is lost; the rest lock onto the ground where they stand: step out of the circle
+                marked.removeIf(e -> !e.isAlive() || e.level() != level || !c.hasLineOfSight(e) || e.distanceTo(c) > 32);
+                for (int i = 0; i < marked.size(); i++) {
+                    Vec3 at = marked.get(i).position();
+                    spots.add(at);
+                    c.fx(at, Vec3.ZERO, FX_MARK_LOCK, c.getId(), marked.get(i).getId(), FIRST_CUT - LOCK + i * 6);
+                }
+                sound(c, ModSounds.CLAW_BLINK.get(), 1.6f, 0.55f);
             }
-            if (age >= 60 && (age - 60) % 6 == 0 && cut < marked.size()) {
-                LivingEntity e = marked.get(cut++);
-                if (!e.isAlive() || e.level() != level) return;
-                blinkTo(c, e, 1.6);
-                c.fx(e.getBoundingBox().getCenter(), Vec3.ZERO, FX_MARK_HIT, c.getId(), e.getId());
+            if (age == FIRST_CUT) c.staggerTaken = -1;
+            if (age >= FIRST_CUT && (age - FIRST_CUT) % 6 == 0 && cut < spots.size()) {
+                LivingEntity e = marked.get(cut);
+                Vec3 at = spots.get(cut++);
+                // the cut lands on the spot, whoever is still in the circle
+                Vec3 from = c.position();
+                Vec3 to = safeSpot(c, at.add(from.subtract(at).multiply(1, 0, 1).normalize().scale(1.4)), at);
+                c.teleportTo(to.x, to.y, to.z);
+                c.face(at);
+                c.fx(from.add(0, 1, 0), to.add(0, 1, 0), FX_BLINK, c.getId());
+                c.fx(at.add(0, 1, 0), Vec3.ZERO, FX_MARK_HIT, c.getId(), e.getId());
                 sound(c, ModSounds.CLAW_SLASH.get(), 1.6f, 1.2f);
-                hit(c, e, 10, false);
+                for (LivingEntity v : level.getEntitiesOfClass(LivingEntity.class, new AABB(at, at).inflate(1.6, 2, 1.6), v -> v != c && v.isAlive() && !(v instanceof Claw))) {
+                    if (v instanceof Player pl && (pl.isCreative() || pl.isSpectator())) continue;
+                    if (v.position().multiply(1, 0, 1).distanceToSqr(at.multiply(1, 0, 1)) <= RADIUS_SQ) hit(c, v, 10, false);
+                }
             }
         }
 
         @Override
         boolean done() {
-            return age >= 60 && cut >= marked.size() && age >= 66 + marked.size() * 6;
+            return age > LOCK && cut >= spots.size() && age >= FIRST_CUT + 6 + spots.size() * 6;
         }
     }
 
@@ -432,8 +458,14 @@ public final class ClawMoves {
 
     // ---- Serum W, "through every floor"
     static final class Warp extends Move {
+        /**
+         * Serum W, through every floor: he kneels and a line shows where he'll lunge (it flashes just before); still on it,
+         * he has you by the throat and drags you through; off it, he misses and staggers (down a moment, taking more damage).
+         */
+        static final int KNEEL = 12, FLASH = 30, LUNGE = 36, STAGGER = 50;
         final ServerPlayer t;
-        boolean started, back;
+        boolean started, back, missed;
+        Vec3 from, to;
 
         Warp(Claw c, ServerPlayer t) {
             super(c);
@@ -449,13 +481,52 @@ public final class ClawMoves {
                 c.fx(c.position().add(0, 1.6, 0), Vec3.ZERO, FX_INJECT, c.getId(), Claw.SERUM_W);
                 sound(c, ModSounds.CLAW_INJECT.get(), 2.0f, 1.3f);
             }
-            if (age == 16) {
-                blinkTo(c, t, 1.2);
-                started = ClawWarp.start(t, c, null);
-                // he goes with them: here, nothing but a rift
-                if (started) c.setInvisible(true);
+            if (age == KNEEL) {
+                // down on a knee, the line out through you
+                c.setBodyPose(Claw.POSE_KNEEL);
+                c.face(t.position());
+                from = c.position();
+                Vec3 dir = t.position().subtract(from).multiply(1, 0, 1);
+                dir = dir.lengthSqr() < 1e-4 ? Vec3.directionFromRotation(0, c.getYRot()) : dir.normalize();
+                to = safeSpot(c, t.position().add(dir.scale(3.5)), t.position());
+                c.fx(from.add(0, 0.1, 0), to.add(0, 0.1, 0), FX_TRI_LINE, c.getId(), 1, LUNGE - KNEEL);
+                sound(c, ModSounds.CLAW_BLINK.get(), 1.4f, 0.6f);
             }
-            if (started && age > 18 && !back && !ClawWarp.busy(t)) {
+            if (age == FLASH && from != null) {
+                // the flash: now or never
+                c.fx(from.add(0, 0.12, 0), to.add(0, 0.12, 0), FX_RUSH_FLASH, c.getId(), t.getId());
+                sound(c, SoundEvents.AMETHYST_BLOCK_CHIME, 2.0f, 1.4f);
+            }
+            if (age == LUNGE && from != null) {
+                Vec3 d = to.subtract(from);
+                Vec3 q = t.position().subtract(from);
+                double f = Mth.clamp(q.dot(d) / Math.max(1e-3, d.lengthSqr()), 0, 1);
+                boolean onLine = t.isAlive() && t.level() == level && !ClawWarp.busy(t)
+                        && from.add(d.scale(f)).multiply(1, 0, 1).distanceTo(t.position().multiply(1, 0, 1)) <= 1.2;
+                c.setBodyPose(Claw.POSE_DASH);
+                if (onLine) {
+                    // caught: by the throat, and through every floor
+                    blinkTo(c, t, 1.2);
+                    started = ClawWarp.start(t, c, null);
+                    // he goes with them: here, nothing but a rift
+                    if (started) c.setInvisible(true);
+                } else {
+                    // missed: along the line and past, off balance
+                    c.teleportTo(to.x, to.y, to.z);
+                    c.fx(from.add(0, 1, 0), to.add(0, 1, 0), FX_BLINK, c.getId());
+                    sound(c, ModSounds.CLAW_CHARGE.get(), 1.6f, 1.2f);
+                    missed = true;
+                }
+            }
+            if (missed && age == LUNGE + 4) {
+                c.setSerums(0);
+                c.groggy = STAGGER;
+                c.setBodyPose(Claw.POSE_GROGGY);
+                c.fx(c.position().add(0, 1, 0), Vec3.ZERO, FX_GROGGY, c.getId());
+                sound(c, SoundEvents.ANVIL_LAND, 1.2f, 0.7f);
+                c.note("rush missed");
+            }
+            if (started && age > LUNGE + 2 && !back && !ClawWarp.busy(t)) {
                 back = true;
                 c.setInvisible(false);
                 if (t.level() == c.level()) blinkTo(c, t, 2.5);
@@ -464,23 +535,34 @@ public final class ClawMoves {
 
         @Override
         boolean done() {
-            return age > 16 && (!started || back) && age >= 24;
+            if (missed) return age >= LUNGE + 4;
+            return age > LUNGE && (!started || back) && age >= LUNGE + 8;
         }
 
         @Override
         boolean immune() {
-            return true;
+            // open to hits while knelt and after a miss; untouchable mid-lunge and while he has you
+            return age >= FLASH && !missed;
         }
     }
 
     // ---- Tri-serum Cocktail
+    /**
+     * Immune while it takes hold, then five dashes through his target, each one shown first as a line: off the line,
+     * it misses. Every dash that lands heals him a little (Config.TRI_HEAL). Then the trip through every floor, if his
+     * target is a player.
+     */
     static final class Tri extends Move {
-        final ServerPlayer t;
+        static final int FIRST = 40, EVERY = 13, WARN = 11, DASHES = 5;
+        final LivingEntity t;
+        @Nullable final ServerPlayer p;
+        Vec3 from, to;
         int dashes;
 
-        Tri(Claw c, ServerPlayer t) {
+        Tri(Claw c, LivingEntity t, @Nullable ServerPlayer p) {
             super(c);
             this.t = t;
+            this.p = p;
         }
 
         @Override
@@ -493,34 +575,56 @@ public final class ClawMoves {
                 sound(c, ModSounds.CLAW_INJECT.get(), 2.0f, 0.7f);
             }
             if (age == 20) c.setBodyPose(Claw.POSE_KNEEL);
-            // five dashes through you, each one healing him a little
-            if (age >= 40 && (age - 40) % 7 == 0 && dashes < 5) {
-                dashes++;
-                Vec3 from = c.position();
-                Vec3 side = Vec3.directionFromRotation(0, c.getRandom().nextFloat() * 360).scale(3.5);
-                Vec3 to = safeSpot(c, t.position().add(side), t.position());
-                c.teleportTo(to.x, to.y, to.z);
-                c.face(t.position());
-                c.setBodyPose(Claw.POSE_DASH);
-                c.fx(from.add(0, 1, 0), to.add(0, 1, 0), FX_TRI_DASH, c.getId(), dashes);
-                sound(c, ModSounds.CLAW_SLASH.get(), 1.8f, 0.8f + dashes * 0.08f);
-                if (hit(c, t, 5, true)) c.heal(c.getMaxHealth() * 0.02f);
+            int k = age - FIRST;
+            if (k >= -WARN && dashes < DASHES && t.isAlive()) {
+                int phase = Math.floorMod(k, EVERY);
+                // the line first: from where he is, through where you are now, a little past
+                if (phase == EVERY - WARN || k == -WARN) {
+                    from = c.position();
+                    Vec3 dir = t.position().subtract(from).multiply(1, 0, 1);
+                    dir = dir.lengthSqr() < 1e-4 ? Vec3.directionFromRotation(0, c.getYRot()) : dir.normalize();
+                    to = safeSpot(c, t.position().add(dir.scale(3.5)), t.position());
+                    c.face(t.position());
+                    c.fx(from.add(0, 0.1, 0), to.add(0, 0.1, 0), FX_TRI_LINE, c.getId(), dashes, WARN);
+                    sound(c, ModSounds.CLAW_BLINK.get(), 1.0f, 0.6f + dashes * 0.08f);
+                }
+                // then the dash, along it: whoever is still on it is cut
+                if (k >= 0 && phase == 0 && from != null) {
+                    dashes++;
+                    c.teleportTo(to.x, to.y, to.z);
+                    c.setBodyPose(Claw.POSE_DASH);
+                    c.fx(from.add(0, 1, 0), to.add(0, 1, 0), FX_TRI_DASH, c.getId(), dashes);
+                    sound(c, ModSounds.CLAW_SLASH.get(), 1.8f, 0.8f + dashes * 0.08f);
+                    Vec3 d = to.subtract(from);
+                    for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, new AABB(from, to).inflate(1.3, 2, 1.3), e -> e != c && e.isAlive() && !(e instanceof Claw))) {
+                        if (e instanceof Player pl && (pl.isCreative() || pl.isSpectator())) continue;
+                        Vec3 q = e.position().subtract(from);
+                        double f = Mth.clamp(q.dot(d) / Math.max(1e-3, d.lengthSqr()), 0, 1);
+                        if (from.add(d.scale(f)).multiply(1, 0, 1).distanceTo(e.position().multiply(1, 0, 1)) > 1.1) continue;
+                        if (hit(c, e, 5, true)) c.heal(com.slop.projectminecraft.Config.TRI_HEAL.get().floatValue());
+                    }
+                    from = null;
+                }
             }
             // and the trip through every floor once more, if the cocktail didn't finish it
-            if (age == 80 && t.isAlive()) {
+            if (age == end() && p != null && p.isAlive() && t == p) {
                 c.setBodyPose(Claw.POSE_STAND);
-                start(c, new Warp(c, t), "serum_w_floors");
+                start(c, new Warp(c, p), "serum_w_floors");
             }
+        }
+
+        int end() {
+            return FIRST + (DASHES - 1) * EVERY + 8;
         }
 
         @Override
         boolean done() {
-            return age >= 80;
+            return age >= end();
         }
 
         @Override
         boolean immune() {
-            return age < 40;
+            return age < FIRST - WARN;
         }
     }
 
@@ -535,7 +639,7 @@ public final class ClawMoves {
             case "serum_w" -> new SerumW(c, p);
             case "serum_k" -> new SerumK(c);
             case "serum_w_floors" -> new Warp(c, p);
-            case "tri_serum" -> new Tri(c, p);
+            case "tri_serum" -> new Tri(c, p, p);
             default -> null;
         };
         if (m == null) return false;

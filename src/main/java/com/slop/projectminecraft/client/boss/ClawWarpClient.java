@@ -175,6 +175,7 @@ public final class ClawWarpClient {
         stopScene();
         t = -1;
         victim = rider = attacker = -1;
+        struggled = false;
         byClaw = false;
         ghost = null;
         for (int i = 0; i < STAGES.length; i++) {
@@ -289,10 +290,25 @@ public final class ClawWarpClient {
         }
     }
 
+    /** Ticks into the scene before held keys count as struggling (time to let go of them). */
+    static final int STRUGGLE_GRACE = 10;
+    private static boolean struggled;
+
     @SubscribeEvent
     public static void onMovementInput(MovementInputUpdateEvent event) {
         if (t < 0 || !involvesMe()) return;
         var in = event.getInput();
+        // Keep perfectly still: the one held who moves, jumps or crouches takes the full slash
+        Minecraft mc = Minecraft.getInstance();
+        boolean moving = in.up || in.down || in.left || in.right || in.jumping || in.shiftKeyDown;
+        if (moving && !struggled && t >= STRUGGLE_GRACE && t < SHATTER_AT && mc.player != null && mc.player.getId() == victim) {
+            struggled = true;
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new com.slop.projectminecraft.network.ArsenalActionPayload(
+                    com.slop.projectminecraft.network.ArsenalActionPayload.WARP_STRUGGLE, 0, 0, 0, new int[0], new float[0]));
+            // the grip tightens
+            sound(net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_NETHERITE.value(), 0.5f);
+            CameraShake.add(0.6f);
+        }
         in.forwardImpulse = in.leftImpulse = 0;
         in.up = in.down = in.left = in.right = in.jumping = in.shiftKeyDown = false;
     }

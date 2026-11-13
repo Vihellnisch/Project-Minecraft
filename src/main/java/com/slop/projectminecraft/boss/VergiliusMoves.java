@@ -48,6 +48,8 @@ public final class VergiliusMoves {
     static final int CD_PUNCTURE = 0, CD_INCISION = 1, CD_FLOW = 2, CD_PATH = 3, CD_GAZE = 4, CD_BLEED = 5, CD_CLEAVER = 6, CD_DROWN = 7,
             CD_BARRIER = 8, CD_FUNERAL = 9;
     static final float LAKE_RADIUS = 9;
+    /** Beside you, his blows on the Claw land this much harder. */
+    static final float ALLY_VS_CLAW = 1.5f;
 
     /** Boss damage of each hit, before Vergilius.dmg(). */
     static final class Damage {
@@ -101,14 +103,29 @@ public final class VergiliusMoves {
         for (int i = 0; i < v.cd.length; i++) if (v.cd[i] > 0) v.cd[i]--;
         if (v.move != null && (v.move.t != t || !t.isAlive())) drop(v);
         if (v.move != null) {
-            v.move.tick();
-            if (!v.move.done()) return;
+            // a move can end everything mid-tick (its blow beats the Claw: he's a companion now, the move dropped)
+            Move m = v.move;
+            m.tick();
+            if (v.move != m || !m.done()) return;
             v.move = null;
             v.setBodyPose(Vergilius.POSE_STAND);
         }
         v.getLookControl().setLookAt(t, 30, 30);
         double dist = v.distanceTo(t);
-        boolean boss = v.state() == Vergilius.FIGHT;
+        boolean boss = v.state() == Vergilius.FIGHT, ally = v.state() == Vergilius.ALLY;
+        // beside you: his E.G.O once the Claw is under half, and Funeral to finish him
+        if (ally && t instanceof com.slop.projectminecraft.boss.Claw c) {
+            if (!v.manifested && c.hp() <= 0.5f) {
+                v.manifested = true;
+                start(v, new Manifest(v, t), "manifest");
+                return;
+            }
+            if (v.ego() && !v.allyFuneral && c.hp() <= 0.2f) {
+                v.allyFuneral = true;
+                start(v, new Funeral(v, t), "funeral");
+                return;
+            }
+        }
         // the E.G.O at half health (as a boss), once
         if (boss && !v.manifested && v.hp() <= 0.5f) {
             v.manifested = true;
@@ -132,13 +149,13 @@ public final class VergiliusMoves {
         } else if (boss && v.ego() && v.cd[CD_BARRIER] == 0 && v.hp() < 0.45f && r.nextFloat() < 0.4f) {
             v.cd[CD_BARRIER] = 400;
             start(v, new Barrier(v, t), "blood_barrier");
-        } else if (boss && v.ego() && v.cd[CD_DROWN] == 0 && v.lake != null && t.position().distanceTo(v.lake) < LAKE_RADIUS && r.nextFloat() < 0.4f) {
+        } else if ((boss || ally) && v.ego() && v.cd[CD_DROWN] == 0 && v.lake != null && t.position().distanceTo(v.lake) < LAKE_RADIUS && r.nextFloat() < 0.4f) {
             v.cd[CD_DROWN] = 360;
             start(v, new Drown(v, t), "drown_in_blood");
-        } else if (boss && v.ego() && v.cd[CD_BLEED] == 0 && dist > 3 && r.nextFloat() < 0.5f) {
+        } else if ((boss || ally) && v.ego() && v.cd[CD_BLEED] == 0 && dist > 3 && r.nextFloat() < 0.5f) {
             v.cd[CD_BLEED] = 160;
             start(v, new Bleed(v, t), "internal_bleeding");
-        } else if (boss && v.ego() && v.cd[CD_CLEAVER] == 0 && dist < 7 && r.nextFloat() < 0.45f) {
+        } else if ((boss || ally) && v.ego() && v.cd[CD_CLEAVER] == 0 && dist < 7 && r.nextFloat() < 0.45f) {
             v.cd[CD_CLEAVER] = 200;
             start(v, new Cleaver(v, t), "blinding_bloodcleaver");
         } else if (v.cd[CD_PATH] == 0 && dist > 4 && dist < 14 && r.nextFloat() < 0.45f) {
@@ -157,7 +174,7 @@ public final class VergiliusMoves {
             approach(v, t, dist);
             return;
         }
-        v.cooldown = (boss ? 12 : 18) + r.nextInt(14);
+        v.cooldown = boss ? 12 + r.nextInt(14) : v.state() == Vergilius.ALLY ? 8 + r.nextInt(8) : 18 + r.nextInt(14);
     }
 
     static void approach(Vergilius v, LivingEntity t, double dist) {
@@ -184,8 +201,13 @@ public final class VergiliusMoves {
         if (!canHit(v, e)) return false;
         e.invulnerableTime = 0;
         DamageSource src = throughArmour ? ModDamageTypes.source(v.level(), ModDamageTypes.CLAW_WARP, v, v) : v.damageSources().mobAttack(v);
-        boolean ok = e.hurt(src, amount * v.dmg());
-        if (ok && burn) e.igniteForSeconds(3);
+        float k = v.state() == Vergilius.ALLY && e instanceof com.slop.projectminecraft.boss.Claw ? ALLY_VS_CLAW : 1;
+        boolean ok = e.hurt(src, amount * v.dmg() * k);
+        if (ok && burn) {
+            e.igniteForSeconds(3);
+            // the Claw won't catch fire from anything else; from this blade, he burns
+            if (v.state() == Vergilius.ALLY && e instanceof com.slop.projectminecraft.boss.Claw) v.clawBurn = Math.max(v.clawBurn, 60);
+        }
         return ok;
     }
 
@@ -440,7 +462,7 @@ public final class VergiliusMoves {
             }
             if (age == 30) {
                 v.setEgo(true);
-                v.say(Vergilius.LINE_MANIFEST);
+                v.say(v.state() == Vergilius.ALLY ? Vergilius.LINE_ALLY_EGO : Vergilius.LINE_MANIFEST);
                 sound(v, SoundEvents.WARDEN_SONIC_BOOM, 0.6f, 0.7f);
             }
             if (age == 60) v.setBodyPose(Vergilius.POSE_STAND);

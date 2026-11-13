@@ -14,6 +14,7 @@ public record ArsenalActionPayload(byte action, double x, double y, double z, in
     public static final byte VERG_CHOICE = 8;    // ints = [Vergilius id, 1 = draw, 0 = show him the hitlist]
     public static final byte GLADIUS_SELECT = 9; // ints = [skill] (the gladius's wheel)
     public static final byte EYE_SLOT = 10;      // swap the carried stack with the eye slot (inventory screen)
+    public static final byte WARP_STRUGGLE = 12; // (no data) the victim moved while Serum W held them
     public static final byte EYE_LOOK = 11;      // ints = [glow 1/0, face mask low 32 bits, high 32 bits] (the eyes' look)
 
     public static final Type<ArsenalActionPayload> TYPE = new Type<>(ProjectMinecraft.id("arsenal_action"));
